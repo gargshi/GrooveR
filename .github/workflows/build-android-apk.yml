@@ -55,11 +55,18 @@ jobs:
 
       - name: Initialize Capacitor Android project
         run: |
-          npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
+          npm install --no-save --legacy-peer-deps @capacitor/core@^7.0.0 @capacitor/cli@^7.0.0 @capacitor/android@^7.0.0
           if [ ! -d android ]; then
             npx cap add android
           fi
           npx cap sync android
+          node -e '
+            const fs = require("fs");
+            const file = "android/build.gradle";
+            let text = fs.readFileSync(file, "utf8");
+            text = text.replace(/mavenCentral\(\)/g, "maven { url \"https://maven-central.storage-download.googleapis.com/maven2/\" }\n        mavenCentral()");
+            fs.writeFileSync(file, text);
+          '
 
       - name: Configure Android icon and dark theme
         run: |
@@ -74,7 +81,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --no-daemon || ./gradlew assembleRelease --no-daemon --refresh-dependencies
 
       - name: Align and sign release APK
         env:
