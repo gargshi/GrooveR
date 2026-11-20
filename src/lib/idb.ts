@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   isMuted: false,
   shuffle: false,
   repeat: 'off',
+  fontFamily: 'system',
   eq: DEFAULT_EQ,
 };
 

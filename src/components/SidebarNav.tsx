@@ -7,6 +7,7 @@ import {
   Mic2,
   Music2,
   Plus,
+  Settings,
   SlidersHorizontal,
 } from 'lucide-react';
 import { LibraryView, Playlist } from '../types/music';
@@ -22,6 +23,7 @@ interface SidebarNavProps {
   onImportFiles: () => void;
   onImportFolder: () => void;
   onOpenEq: () => void;
+  onOpenSettings: () => void;
   trackCount: number;
 }
 
@@ -43,6 +45,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onImportFiles,
   onImportFolder,
   onOpenEq,
+  onOpenSettings,
   trackCount,
 }) => {
   return (
@@ -161,6 +164,16 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             <span>5-Band Equalizer</span>
           </span>
           <span className="text-zinc-500">DSP</span>
+        </button>
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          className="w-full min-h-[42px] px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 text-xs font-medium flex items-center justify-between transition-colors whitespace-nowrap"
+        >
+          <span className="flex items-center gap-2">
+            <Settings className="w-4 h-4 text-zinc-400" />
+            <span>Font & Settings</span>
+          </span>
         </button>
         <PWAInstallButton />
       </div>

@@ -10,16 +10,19 @@ import {
   Play,
   Plus,
   Search,
+  Settings,
   Shuffle,
   SlidersHorizontal,
-  Sparkles,
   Trash2,
+  Type,
   Upload,
 } from 'lucide-react';
+import { FONT_PRESETS } from '../lib/fonts';
 import { formatBytes, formatDuration, isLosslessFormat } from '../lib/formatters';
 import {
   AlbumSummary,
   ArtistSummary,
+  FontOption,
   LibraryView,
   Playlist,
   SongFilter,
@@ -47,7 +50,6 @@ interface LibraryViewsProps {
   onSelectPlaylist: (id: string | null) => void;
   onImportFiles: () => void;
   onImportFolder: () => void;
-  onLoadSampleTracks: () => Promise<void>;
   onPlayTrackList: (list: Track[], startIndex: number) => void;
   onShuffleTrackList: (list: Track[]) => void;
   onPlayNext: (track: Track) => void;
@@ -63,6 +65,9 @@ interface LibraryViewsProps {
   onExportManifest: () => void;
   onClearLibrary: () => Promise<void>;
   onOpenEq: () => void;
+  onOpenSettings: () => void;
+  fontFamily: FontOption;
+  onSelectFont: (font: FontOption) => void;
 }
 
 export const LibraryViews: React.FC<LibraryViewsProps> = ({
@@ -79,7 +84,6 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onSelectPlaylist,
   onImportFiles,
   onImportFolder,
-  onLoadSampleTracks,
   onPlayTrackList,
   onShuffleTrackList,
   onPlayNext,
@@ -95,6 +99,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onExportManifest,
   onClearLibrary,
   onOpenEq,
+  onOpenSettings,
+  fontFamily,
+  onSelectFont,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [songFilter, setSongFilter] = useState<SongFilter>('all');
@@ -233,9 +240,17 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       <div className="px-4 sm:px-8 py-6 max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-4 lg:hidden">
           <span className="font-display text-xl font-bold text-white">GrooveR</span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <OfflineIndicator />
             <PWAInstallButton compact />
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
+              aria-label="Open settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -284,16 +299,6 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 <FolderPlus className="w-4 h-4 shrink-0 text-zinc-300" />
                 <span>Scan Music Folder</span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => void onLoadSampleTracks()}
-                disabled={isImporting}
-                className="min-h-[48px] px-4 rounded-xl text-zinc-300 hover:text-white hover:bg-white/[0.05] text-sm font-medium inline-flex items-center gap-2 transition-colors whitespace-nowrap"
-              >
-                <Sparkles className="w-4 h-4 shrink-0 text-[#2E8BFF]" />
-                <span>Load 3 Playable Test Tracks</span>
-              </button>
             </div>
           </div>
         </section>
@@ -316,6 +321,14 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             aria-label="Open equalizer"
           >
             <SlidersHorizontal className="w-4 h-4 text-[#2E8BFF]" />
+          </button>
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
+            aria-label="Open settings"
+          >
+            <Settings className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -1068,9 +1081,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
 
             <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] flex flex-col justify-between gap-4">
               <div>
-                <h2 className="text-sm font-semibold text-white">Library Actions</h2>
+                <h2 className="text-sm font-semibold text-white">Library Backup</h2>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Export track metadata or load playable audio samples to verify DSP playback.
+                  Export track metadata and playlists as a local JSON manifest.
                 </p>
               </div>
               <div className="space-y-2">
@@ -1083,16 +1096,44 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   <Download className="w-4 h-4 text-[#2E8BFF]" />
                   <span>Export Library JSON</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void onLoadSampleTracks()}
-                  disabled={isImporting}
-                  className="w-full min-h-[42px] px-3.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-xs font-medium text-zinc-100 flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-[#2E8BFF]" />
-                  <span>Add 3 Test Tracks</span>
-                </button>
               </div>
+            </div>
+          </div>
+
+          {/* Font Setting */}
+          <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Type className="w-4 h-4 text-[#2E8BFF]" />
+                <div>
+                  <h2 className="text-sm font-semibold text-white">Typography</h2>
+                  <p className="text-xs text-zinc-400">
+                    Choose your preferred app font (defaults to system font)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {FONT_PRESETS.map((preset) => {
+                const selected = fontFamily === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => onSelectFont(preset.id)}
+                    style={{ fontFamily: preset.cssStack }}
+                    className={`min-h-[52px] px-3.5 py-2.5 rounded-xl text-left border transition-colors ${
+                      selected
+                        ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                        : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold truncate">{preset.label}</p>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">{preset.description}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

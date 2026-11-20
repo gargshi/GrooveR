@@ -6,9 +6,11 @@ import { NowPlayingSheet } from './components/NowPlayingSheet';
 import { PlayerBar } from './components/PlayerBar';
 import { PlaylistModal } from './components/PlaylistModal';
 import { QueueDrawer } from './components/QueueDrawer';
+import { SettingsModal } from './components/SettingsModal';
 import { SidebarNav } from './components/SidebarNav';
 import { TrackEditorModal } from './components/TrackEditorModal';
 import { GrooveAudioEngine } from './lib/audioEngine';
+import { applyAppFont } from './lib/fonts';
 import {
   clearOfflineLibrary,
   DEFAULT_SETTINGS,
@@ -25,9 +27,9 @@ import {
   updateTrackRecord,
 } from './lib/idb';
 import { parseAudioFileToTrack } from './lib/metadataParser';
-import { generatePlayableSampleTracks } from './lib/sampleAudioGenerator';
 import {
   EqSettings,
+  FontOption,
   LibraryView,
   PersistedSettings,
   Playlist,
@@ -75,6 +77,7 @@ export default function App() {
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isEqOpen, setIsEqOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [playlistModalState, setPlaylistModalState] = useState<{
     open: boolean;
@@ -118,10 +121,17 @@ export default function App() {
         ]);
         if (cancelled) return;
 
-        const sortedTracks = [...loadedTracks].sort((a, b) => b.addedAt - a.addedAt);
+        // Clean up any legacy sample tracks if present
+        const legacySamples = loadedTracks.filter((t) => t.isSample);
+        if (legacySamples.length > 0) {
+          await Promise.all(legacySamples.map((t) => deleteTrackWithAudio(t.id)));
+        }
+        const realTracks = loadedTracks.filter((t) => !t.isSample);
+        const sortedTracks = [...realTracks].sort((a, b) => b.addedAt - a.addedAt);
         setTracks(sortedTracks);
         setPlaylists(loadedPlaylists.sort((a, b) => b.updatedAt - a.updatedAt));
         setSettings(loadedSettings);
+        applyAppFont(loadedSettings.fontFamily);
         engine.setVolume(loadedSettings.volume, loadedSettings.isMuted);
         engine.applyEq(loadedSettings.eq);
         await refreshStorageStats(sortedTracks);
@@ -149,6 +159,11 @@ export default function App() {
       cancelled = true;
     };
   }, [engine, refreshStorageStats]);
+
+  // Apply active font preset whenever changed
+  useEffect(() => {
+    applyAppFont(settings.fontFamily);
+  }, [settings.fontFamily]);
 
   // Persist settings helper
   const updateSettings = useCallback(
@@ -413,28 +428,6 @@ export default function App() {
     [tracks, queueIds.length, refreshStorageStats, showToast]
   );
 
-  const handleLoadSampleTracks = useCallback(async () => {
-    setIsImporting(true);
-    setImportProgressText('Rendering 3 lossless WAV test tracks...');
-    try {
-      const generated = await generatePlayableSampleTracks();
-      for (const item of generated) {
-        await saveTrackWithAudio(item.track, item.blob);
-      }
-      const newTracks = generated.map((g) => g.track);
-      const nextTracks = [...newTracks, ...tracks];
-      setTracks(nextTracks);
-      await refreshStorageStats(nextTracks);
-
-      const newIds = nextTracks.map((t) => t.id);
-      setQueueIds(newIds);
-      showToast('Added 3 playable test tracks to your offline vault');
-    } finally {
-      setIsImporting(false);
-      setImportProgressText(null);
-    }
-  }, [tracks, refreshStorageStats, showToast]);
-
   const handlePlayTrackList = useCallback(
     (list: Track[], startIndex: number) => {
       if (list.length === 0) return;
@@ -682,7 +675,7 @@ export default function App() {
 
   return (
     <div
-      className="h-dvh w-full flex flex-col bg-[#090A0D] text-[#F3F4F6] overflow-hidden select-none"
+      className="h-dvh w-full flex flex-col bg-[#090A0D] text-[#F3F4F6] overflow-hidden select-none pt-safe"
       onDragOver={(e) => {
         e.preventDefault();
         setIsDraggingFiles(true);
@@ -735,6 +728,7 @@ export default function App() {
           onImportFiles={() => fileInputRef.current?.click()}
           onImportFolder={() => folderInputRef.current?.click()}
           onOpenEq={() => setIsEqOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
           trackCount={tracks.length}
         />
 
@@ -761,7 +755,6 @@ export default function App() {
               onSelectPlaylist={setActivePlaylistId}
               onImportFiles={() => fileInputRef.current?.click()}
               onImportFolder={() => folderInputRef.current?.click()}
-              onLoadSampleTracks={handleLoadSampleTracks}
               onPlayTrackList={handlePlayTrackList}
               onShuffleTrackList={handleShuffleTrackList}
               onPlayNext={handlePlayNext}
@@ -779,6 +772,11 @@ export default function App() {
               onExportManifest={handleExportManifest}
               onClearLibrary={handleClearLibrary}
               onOpenEq={() => setIsEqOpen(true)}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              fontFamily={settings.fontFamily}
+              onSelectFont={(font: FontOption) =>
+                updateSettings((prev) => ({ ...prev, fontFamily: font }))
+              }
             />
           )}
         </main>
@@ -917,6 +915,17 @@ export default function App() {
         eq={settings.eq}
         onChange={handleEqChange}
         onClose={() => setIsEqOpen(false)}
+      />
+
+      {/* Font & App Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        fontFamily={settings.fontFamily}
+        onSelectFont={(font: FontOption) =>
+          updateSettings((prev) => ({ ...prev, fontFamily: font }))
+        }
+        onOpenEq={() => setIsEqOpen(true)}
+        onClose={() => setIsSettingsOpen(false)}
       />
 
       {/* Offline Track Tag & Artwork Editor */}

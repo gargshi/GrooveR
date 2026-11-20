@@ -68,7 +68,7 @@ jobs:
             fs.writeFileSync(file, text);
           '
 
-      - name: Configure Android icon and dark theme
+      - name: Configure Android icon, dark theme, and status bar clearance
         run: |
           for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
             mkdir -p "$dir"
@@ -76,6 +76,94 @@ jobs:
             cp public/pwa-512x512.png "$dir/ic_launcher_round.png"
             cp public/pwa-maskable-512x512.png "$dir/ic_launcher_foreground.png"
           done
+
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+
+            const stylesXml = `<?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+                  <item name="colorPrimary">#090A0D</item>
+                  <item name="colorPrimaryDark">#090A0D</item>
+                  <item name="colorAccent">#2E8BFF</item>
+              </style>
+
+              <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
+                  <item name="windowActionBar">false</item>
+                  <item name="windowNoTitle">true</item>
+                  <item name="android:background">#090A0D</item>
+                  <item name="android:statusBarColor">#090A0D</item>
+                  <item name="android:navigationBarColor">#0D0F14</item>
+                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:windowLightNavigationBar">false</item>
+              </style>
+
+              <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+                  <item name="android:background">@drawable/splash</item>
+                  <item name="android:statusBarColor">#090A0D</item>
+                  <item name="android:windowLightStatusBar">false</item>
+              </style>
+          </resources>
+          `.replace(/^          /gm, "");
+
+            const stylesV35Xml = `<?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
+                  <item name="windowActionBar">false</item>
+                  <item name="windowNoTitle">true</item>
+                  <item name="android:background">#090A0D</item>
+                  <item name="android:statusBarColor">#090A0D</item>
+                  <item name="android:navigationBarColor">#0D0F14</item>
+                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:windowLightNavigationBar">false</item>
+                  <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+              </style>
+          </resources>
+          `.replace(/^          /gm, "");
+
+            fs.writeFileSync("android/app/src/main/res/values/styles.xml", stylesXml);
+            fs.mkdirSync("android/app/src/main/res/values-v35", { recursive: true });
+            fs.writeFileSync("android/app/src/main/res/values-v35/styles.xml", stylesV35Xml);
+          '
+
+          MAIN_ACT=$(find android/app/src/main/java -name "MainActivity.java" | head -n 1)
+          if [ -n "$MAIN_ACT" ]; then
+            PKG_LINE=$(grep "^package " "$MAIN_ACT")
+            node -e '
+              const fs = require("fs");
+              const file = process.argv[1];
+              const pkg = process.argv[2];
+              const javaCode = [
+                pkg,
+                "",
+                "import android.graphics.Color;",
+                "import android.os.Bundle;",
+                "import android.view.Window;",
+                "import androidx.core.view.WindowCompat;",
+                "import androidx.core.view.WindowInsetsControllerCompat;",
+                "import com.getcapacitor.BridgeActivity;",
+                "",
+                "public class MainActivity extends BridgeActivity {",
+                "    @Override",
+                "    protected void onCreate(Bundle savedInstanceState) {",
+                "        super.onCreate(savedInstanceState);",
+                "        Window window = getWindow();",
+                "        WindowCompat.setDecorFitsSystemWindows(window, true);",
+                "        window.setStatusBarColor(Color.parseColor(\"#090A0D\"));",
+                "        window.setNavigationBarColor(Color.parseColor(\"#0D0F14\"));",
+                "        WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());",
+                "        if (controller != null) {",
+                "            controller.setAppearanceLightStatusBars(false);",
+                "            controller.setAppearanceLightNavigationBars(false);",
+                "        }",
+                "    }",
+                "}",
+                ""
+              ].join("\n");
+              fs.writeFileSync(file, javaCode);
+            ' "$MAIN_ACT" "$PKG_LINE"
+          fi
 
       - name: Build unsigned release APK
         working-directory: android

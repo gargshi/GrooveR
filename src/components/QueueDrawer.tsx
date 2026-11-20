@@ -29,7 +29,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#0D0F14] border-l border-white/10 h-full flex flex-col shadow-2xl">
+      <div className="w-full max-w-md bg-[#0D0F14] border-l border-white/10 h-full flex flex-col shadow-2xl pt-safe">
         <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.08] shrink-0">
           <div>
             <h2 className="font-display text-base font-bold text-white">Up Next Queue</h2>

@@ -68,12 +68,15 @@ export interface EqSettings {
   bands: EqBands;
 }
 
+export type FontOption = 'system' | 'jakarta' | 'manrope' | 'serif' | 'mono';
+
 export interface PersistedSettings {
   id: string;
   volume: number;
   isMuted: boolean;
   shuffle: boolean;
   repeat: RepeatMode;
+  fontFamily: FontOption;
   eq: EqSettings;
   lastTrackId?: string;
 }
