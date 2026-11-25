@@ -34,6 +34,7 @@ import {
   PersistedSettings,
   Playlist,
   RepeatMode,
+  SongsDisplayMode,
   StorageEstimateInfo,
   Track,
   TrackMetadataUpdate,
@@ -843,6 +844,11 @@ export default function App() {
               onToggleLockscreenWidget={(enabled: boolean) =>
                 updateSettings((prev) => ({ ...prev, lockscreenWidget: enabled }))
               }
+              songsDisplayMode={settings.songsDisplayMode}
+              onSelectSongsDisplayMode={(mode: SongsDisplayMode) =>
+                updateSettings((prev) => ({ ...prev, songsDisplayMode: mode }))
+              }
+              onTogglePlay={() => void handleTogglePlay()}
             />
           )}
         </main>
@@ -989,6 +995,7 @@ export default function App() {
         fontFamily={settings.fontFamily}
         uiScale={settings.uiScale}
         lockscreenWidget={settings.lockscreenWidget}
+        songsDisplayMode={settings.songsDisplayMode}
         onSelectFont={(font: FontOption) =>
           updateSettings((prev) => ({ ...prev, fontFamily: font }))
         }
@@ -997,6 +1004,9 @@ export default function App() {
         }
         onToggleLockscreenWidget={(enabled: boolean) =>
           updateSettings((prev) => ({ ...prev, lockscreenWidget: enabled }))
+        }
+        onSelectSongsDisplayMode={(mode: SongsDisplayMode) =>
+          updateSettings((prev) => ({ ...prev, songsDisplayMode: mode }))
         }
         onOpenEq={() => setIsEqOpen(true)}
         onClose={() => setIsSettingsOpen(false)}

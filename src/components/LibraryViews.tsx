@@ -5,6 +5,8 @@ import {
   FolderPlus,
   HardDrive,
   Heart,
+  Layers,
+  List,
   ListMusic,
   Maximize2,
   Mic2,
@@ -28,6 +30,7 @@ import {
   LibraryView,
   Playlist,
   SongFilter,
+  SongsDisplayMode,
   SortDirection,
   SortField,
   StorageEstimateInfo,
@@ -37,6 +40,7 @@ import {
 import { CoverArt } from './CoverArt';
 import { OfflineIndicator } from './OfflineIndicator';
 import { PWAInstallButton } from './PWAInstallButton';
+import { SongDeckView } from './SongDeckView';
 import { TrackRow } from './TrackRow';
 
 interface LibraryViewsProps {
@@ -75,6 +79,9 @@ interface LibraryViewsProps {
   onSelectUiScale: (scale: UiScaleOption) => void;
   lockscreenWidget: boolean;
   onToggleLockscreenWidget: (enabled: boolean) => void;
+  songsDisplayMode: SongsDisplayMode;
+  onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
+  onTogglePlay: () => void;
 }
 
 export const LibraryViews: React.FC<LibraryViewsProps> = ({
@@ -113,6 +120,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onSelectUiScale,
   lockscreenWidget,
   onToggleLockscreenWidget,
+  songsDisplayMode,
+  onSelectSongsDisplayMode,
+  onTogglePlay,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [songFilter, setSongFilter] = useState<SongFilter>('all');
@@ -447,7 +457,42 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className="flex items-center gap-1 p-1 rounded-xl bg-[#111318] border border-white/[0.07]"
+                role="group"
+                aria-label="Songs display layout"
+              >
+                <button
+                  type="button"
+                  onClick={() => onSelectSongsDisplayMode('list')}
+                  className={`min-h-[36px] px-2.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                    songsDisplayMode === 'list'
+                      ? 'bg-[#2E8BFF] text-white'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                  aria-pressed={songsDisplayMode === 'list'}
+                  aria-label="List view"
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span>List</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectSongsDisplayMode('deck')}
+                  className={`min-h-[36px] px-2.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                    songsDisplayMode === 'deck'
+                      ? 'bg-[#2E8BFF] text-white'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                  aria-pressed={songsDisplayMode === 'deck'}
+                  aria-label="Deck of cards view"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Deck</span>
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => onSelectView('artists')}
@@ -482,7 +527,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             </div>
           </div>
 
-          {/* Track List */}
+          {/* Track List or Deck of Cards */}
           {filteredSongs.length === 0 ? (
             <div className="py-16 text-center rounded-2xl bg-[#111318] border border-white/[0.06]">
               <p className="text-sm font-medium text-zinc-300">No matching tracks</p>
@@ -490,6 +535,21 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 Try clearing your search or switching filters.
               </p>
             </div>
+          ) : songsDisplayMode === 'deck' ? (
+            <SongDeckView
+              tracks={filteredSongs}
+              currentTrackId={currentTrackId}
+              isPlaying={isPlaying}
+              playlists={playlists}
+              onPlayTrack={(idx) => onPlayTrackList(filteredSongs, idx)}
+              onTogglePlay={onTogglePlay}
+              onPlayNext={onPlayNext}
+              onAddToQueue={onAddToQueue}
+              onToggleFavorite={onToggleFavorite}
+              onAddToPlaylist={onAddToPlaylist}
+              onEditTrack={onEditTrack}
+              onDeleteTrack={onDeleteTrack}
+            />
           ) : (
             <div className="divide-y divide-white/[0.04] rounded-2xl bg-[#111318]/60 border border-white/[0.06] p-1.5">
               {filteredSongs.map((trk, idx) => (

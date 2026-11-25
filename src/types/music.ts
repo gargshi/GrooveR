@@ -79,6 +79,8 @@ export type FontOption =
 
 export type UiScaleOption = 0.85 | 0.92 | 1 | 1.1 | 1.2;
 
+export type SongsDisplayMode = 'list' | 'deck';
+
 export interface PersistedSettings {
   id: string;
   volume: number;
@@ -88,6 +90,7 @@ export interface PersistedSettings {
   fontFamily: FontOption;
   uiScale: UiScaleOption;
   lockscreenWidget: boolean;
+  songsDisplayMode: SongsDisplayMode;
   eq: EqSettings;
   lastTrackId?: string;
 }

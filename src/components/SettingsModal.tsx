@@ -1,16 +1,27 @@
-import React from 'react';
-import { Check, Maximize2, SlidersHorizontal, Smartphone, Type, X } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Check,
+  Layers,
+  List,
+  Maximize2,
+  SlidersHorizontal,
+  Smartphone,
+  Type,
+  X,
+} from 'lucide-react';
 import { FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
-import { FontOption, UiScaleOption } from '../types/music';
+import { FontOption, SongsDisplayMode, UiScaleOption } from '../types/music';
 
 interface SettingsModalProps {
   isOpen: boolean;
   fontFamily: FontOption;
   uiScale: UiScaleOption;
   lockscreenWidget: boolean;
+  songsDisplayMode: SongsDisplayMode;
   onSelectFont: (font: FontOption) => void;
   onSelectUiScale: (scale: UiScaleOption) => void;
   onToggleLockscreenWidget: (enabled: boolean) => void;
+  onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
   onOpenEq: () => void;
   onClose: () => void;
 }
@@ -20,39 +31,198 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   fontFamily,
   uiScale,
   lockscreenWidget,
+  songsDisplayMode,
   onSelectFont,
   onSelectUiScale,
   onToggleLockscreenWidget,
+  onSelectSongsDisplayMode,
   onOpenEq,
   onClose,
 }) => {
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  const dragStartRef = useRef<{ y: number; time: number } | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDragY(0);
+      setIsDragging(false);
+      setIsClosing(false);
+    }
+    return () => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
+  }, [isOpen]);
+
+  const dismissAnimated = useCallback(() => {
+    if (isClosing) return;
+    setIsDragging(false);
+    setIsClosing(true);
+    closeTimerRef.current = window.setTimeout(() => {
+      onClose();
+    }, 180);
+  }, [isClosing, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dismissAnimated();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, dismissAnimated]);
+
   if (!isOpen) return null;
+
+  const handleHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore if unsupported
+    }
+    dragStartRef.current = { y: e.clientY, time: Date.now() };
+    setIsDragging(true);
+  };
+
+  const handleHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current || !isDragging) return;
+    const dy = e.clientY - dragStartRef.current.y;
+    setDragY(dy > 0 ? dy : dy * 0.15);
+  };
+
+  const handleHandlePointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current) return;
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+
+    const dt = Math.max(1, Date.now() - dragStartRef.current.time);
+    const dy = e.clientY - dragStartRef.current.y;
+    const velocityY = dy / dt;
+
+    dragStartRef.current = null;
+    setIsDragging(false);
+
+    if (dy > 85 || (velocityY > 0.45 && dy > 20)) {
+      dismissAnimated();
+    } else {
+      setDragY(0);
+    }
+  };
+
+  const backdropOpacity = isClosing
+    ? 0
+    : Math.max(0.15, 0.75 * (1 - Math.max(0, dragY) / 380));
+
+  const sheetTransform = isClosing
+    ? 'translate3d(0, 100%, 0)'
+    : `translate3d(0, ${Math.max(-12, dragY)}px, 0)`;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm sm:p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) dismissAnimated();
+      }}
+      style={{
+        backgroundColor: `rgba(0, 0, 0, ${backdropOpacity})`,
+        transition: isDragging ? 'none' : 'background-color 180ms ease',
+      }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="App Settings"
     >
-      <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-5 max-h-[88vh] overflow-y-auto pb-safe">
-        <div className="sm:hidden w-10 h-1 bg-zinc-700 rounded-full mx-auto -mt-1 mb-2" />
+      <div
+        style={{
+          transform: sheetTransform,
+          opacity: isClosing ? 0 : 1,
+          transition: isDragging
+            ? 'none'
+            : 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
+        }}
+        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 px-5 sm:px-6 pb-5 sm:pb-6 pt-0 shadow-2xl space-y-5 max-h-[88vh] overflow-y-auto pb-safe"
+      >
+        {/* Slide-to-dismiss top white handle bar + header drag zone */}
+        <div
+          onPointerDown={handleHandlePointerDown}
+          onPointerMove={handleHandlePointerMove}
+          onPointerUp={handleHandlePointerEnd}
+          onPointerCancel={handleHandlePointerEnd}
+          className="sticky top-0 z-10 bg-[#12151C] -mx-5 sm:-mx-6 px-5 sm:px-6 pt-3 pb-2 touch-none select-none cursor-grab active:cursor-grabbing border-b border-white/[0.06]"
+        >
+          <div
+            className="w-12 h-1.5 bg-white/85 rounded-full mx-auto mb-3 shadow-sm"
+            aria-label="Slide down to close settings"
+          />
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-lg font-bold text-white">Settings</h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Typography, Display Scale & Lockscreen Controls
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-white">Settings</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Library Layout, Typography, Scale & Lockscreen
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissAnimated}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+              aria-label="Close settings"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06]"
-            aria-label="Close settings"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        </div>
+
+        {/* Songs Display Layout Setting */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+            <Layers className="w-4 h-4 text-[#2E8BFF]" />
+            <span>Songs Screen Display</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onSelectSongsDisplayMode('list')}
+              className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
+                songsDisplayMode === 'list'
+                  ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+              }`}
+            >
+              <List className="w-4 h-4 text-[#2E8BFF] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold">Song List</p>
+                <p className="text-[11px] text-zinc-400 truncate">Compact rows</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectSongsDisplayMode('deck')}
+              className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
+                songsDisplayMode === 'deck'
+                  ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+              }`}
+            >
+              <Layers className="w-4 h-4 text-[#2E8BFF] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold">Deck of Cards</p>
+                <p className="text-[11px] text-zinc-400 truncate">Swipeable stack</p>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* UI Scaling Setting */}
@@ -161,7 +331,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={() => {
-              onClose();
+              dismissAnimated();
               onOpenEq();
             }}
             className="w-full min-h-[46px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-sm font-medium text-white flex items-center justify-between transition-colors"

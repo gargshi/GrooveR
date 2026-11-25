@@ -30,6 +30,7 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   fontFamily: 'system',
   uiScale: 1,
   lockscreenWidget: true,
+  songsDisplayMode: 'list',
   eq: DEFAULT_EQ,
 };
 
