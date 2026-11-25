@@ -10,7 +10,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SidebarNav } from './components/SidebarNav';
 import { TrackEditorModal } from './components/TrackEditorModal';
 import { GrooveAudioEngine } from './lib/audioEngine';
-import { applyAppFont } from './lib/fonts';
+import { applyAppFont, applyUiScale } from './lib/fonts';
 import {
   clearOfflineLibrary,
   DEFAULT_SETTINGS,
@@ -37,6 +37,7 @@ import {
   StorageEstimateInfo,
   Track,
   TrackMetadataUpdate,
+  UiScaleOption,
 } from './types/music';
 
 const AUDIO_EXT_REGEX = /\.(mp3|flac|wav|m4a|aac|ogg|opus|webm)$/i;
@@ -132,6 +133,7 @@ export default function App() {
         setPlaylists(loadedPlaylists.sort((a, b) => b.updatedAt - a.updatedAt));
         setSettings(loadedSettings);
         applyAppFont(loadedSettings.fontFamily);
+        applyUiScale(loadedSettings.uiScale);
         engine.setVolume(loadedSettings.volume, loadedSettings.isMuted);
         engine.applyEq(loadedSettings.eq);
         await refreshStorageStats(sortedTracks);
@@ -160,10 +162,14 @@ export default function App() {
     };
   }, [engine, refreshStorageStats]);
 
-  // Apply active font preset whenever changed
+  // Apply active font and UI scale whenever changed
   useEffect(() => {
     applyAppFont(settings.fontFamily);
   }, [settings.fontFamily]);
+
+  useEffect(() => {
+    applyUiScale(settings.uiScale);
+  }, [settings.uiScale]);
 
   // Persist settings helper
   const updateSettings = useCallback(
@@ -335,9 +341,9 @@ export default function App() {
     };
   }, [engine, handleNext]);
 
-  // MediaSession API Sync (OnePlus 15R Lockscreen & Bluetooth Controls)
+  // MediaSession API + Native Lockscreen Widget Sync (OnePlus 15R Lockscreen & Bluetooth Controls)
   useEffect(() => {
-    engine.updateMediaSession(currentTrack, isPlaying, {
+    engine.updateMediaSession(currentTrack, isPlaying, settings.lockscreenWidget, {
       onPlay: () => void handleTogglePlay(),
       onPause: () => {
         engine.pause();
@@ -348,9 +354,61 @@ export default function App() {
       onSeek: (t) => {
         engine.seek(t);
         setCurrentTime(t);
+        engine.updatePositionState(t, duration, isPlaying, settings.lockscreenWidget);
       },
     });
-  }, [engine, currentTrack, isPlaying, handleTogglePlay, handlePrev, handleNext]);
+  }, [
+    engine,
+    currentTrack,
+    isPlaying,
+    duration,
+    settings.lockscreenWidget,
+    handleTogglePlay,
+    handlePrev,
+    handleNext,
+  ]);
+
+  // Keep MediaSession position bar in sync smoothly
+  useEffect(() => {
+    if (!isPlaying || !currentTrack || !settings.lockscreenWidget) return;
+    const interval = setInterval(() => {
+      const audio = engine.element;
+      const dur = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : currentTrack.duration;
+      engine.updatePositionState(audio.currentTime || 0, dur, true, settings.lockscreenWidget);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [engine, isPlaying, currentTrack, settings.lockscreenWidget]);
+
+  // Listen for native Android LockscreenMediaPlugin button actions
+  useEffect(() => {
+    const onNativeMediaAction = (event: Event) => {
+      type MediaActionPayload = { action?: string; positionMs?: number };
+      const raw = event as CustomEvent<MediaActionPayload> & MediaActionPayload;
+      const detail = raw.detail && typeof raw.detail === 'object' ? raw.detail : raw;
+      if (!detail?.action) return;
+      if (detail.action === 'play') {
+        if (!isPlaying) void handleTogglePlay();
+      } else if (detail.action === 'pause') {
+        if (isPlaying) {
+          engine.pause();
+          setIsPlaying(false);
+        }
+      } else if (detail.action === 'toggle') {
+        void handleTogglePlay();
+      } else if (detail.action === 'next') {
+        handleNext();
+      } else if (detail.action === 'prev') {
+        handlePrev();
+      } else if (detail.action === 'seek' && typeof detail.positionMs === 'number') {
+        const sec = detail.positionMs / 1000;
+        engine.seek(sec);
+        setCurrentTime(sec);
+      }
+    };
+
+    window.addEventListener('grooverMediaAction', onNativeMediaAction);
+    return () => window.removeEventListener('grooverMediaAction', onNativeMediaAction);
+  }, [engine, isPlaying, handleTogglePlay, handleNext, handlePrev]);
 
   // Sleep Timer Countdown
   useEffect(() => {
@@ -777,6 +835,14 @@ export default function App() {
               onSelectFont={(font: FontOption) =>
                 updateSettings((prev) => ({ ...prev, fontFamily: font }))
               }
+              uiScale={settings.uiScale}
+              onSelectUiScale={(scale: UiScaleOption) =>
+                updateSettings((prev) => ({ ...prev, uiScale: scale }))
+              }
+              lockscreenWidget={settings.lockscreenWidget}
+              onToggleLockscreenWidget={(enabled: boolean) =>
+                updateSettings((prev) => ({ ...prev, lockscreenWidget: enabled }))
+              }
             />
           )}
         </main>
@@ -921,8 +987,16 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         fontFamily={settings.fontFamily}
+        uiScale={settings.uiScale}
+        lockscreenWidget={settings.lockscreenWidget}
         onSelectFont={(font: FontOption) =>
           updateSettings((prev) => ({ ...prev, fontFamily: font }))
+        }
+        onSelectUiScale={(scale: UiScaleOption) =>
+          updateSettings((prev) => ({ ...prev, uiScale: scale }))
+        }
+        onToggleLockscreenWidget={(enabled: boolean) =>
+          updateSettings((prev) => ({ ...prev, lockscreenWidget: enabled }))
         }
         onOpenEq={() => setIsEqOpen(true)}
         onClose={() => setIsSettingsOpen(false)}

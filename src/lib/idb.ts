@@ -28,6 +28,8 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   shuffle: false,
   repeat: 'off',
   fontFamily: 'system',
+  uiScale: 1,
+  lockscreenWidget: true,
   eq: DEFAULT_EQ,
 };
 

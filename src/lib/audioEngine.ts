@@ -138,9 +138,45 @@ export class GrooveAudioEngine {
     return out;
   }
 
+  private getNativeMediaPlugin(): {
+    updateSession?: (opts: {
+      title: string;
+      artist: string;
+      album: string;
+      artwork: string;
+      isPlaying: boolean;
+      durationMs: number;
+      positionMs: number;
+    }) => Promise<void>;
+    clearSession?: () => Promise<void>;
+  } | null {
+    const cap = (
+      window as unknown as {
+        Capacitor?: {
+          Plugins?: {
+            LockscreenMedia?: {
+              updateSession?: (opts: {
+                title: string;
+                artist: string;
+                album: string;
+                artwork: string;
+                isPlaying: boolean;
+                durationMs: number;
+                positionMs: number;
+              }) => Promise<void>;
+              clearSession?: () => Promise<void>;
+            };
+          };
+        };
+      }
+    ).Capacitor;
+    return cap?.Plugins?.LockscreenMedia ?? null;
+  }
+
   updateMediaSession(
     track: Track | null,
     isPlaying: boolean,
+    enabled: boolean,
     handlers: {
       onPlay: () => void;
       onPause: () => void;
@@ -149,9 +185,16 @@ export class GrooveAudioEngine {
       onSeek: (time: number) => void;
     }
   ): void {
-    if (!('mediaSession' in navigator)) return;
-    if (!track) {
-      navigator.mediaSession.metadata = null;
+    const nativePlugin = this.getNativeMediaPlugin();
+
+    if (!enabled || !track) {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = 'none';
+      }
+      if (nativePlugin?.clearSession) {
+        void nativePlugin.clearSession().catch(() => {});
+      }
       return;
     }
 
@@ -159,21 +202,75 @@ export class GrooveAudioEngine {
       ? [{ src: track.coverArt, sizes: '512x512', type: 'image/jpeg' }]
       : [{ src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' }];
 
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: track.title,
-      artist: track.artist,
-      album: track.album,
-      artwork,
-    });
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        artwork,
+      });
 
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-    navigator.mediaSession.setActionHandler('play', handlers.onPlay);
-    navigator.mediaSession.setActionHandler('pause', handlers.onPause);
-    navigator.mediaSession.setActionHandler('previoustrack', handlers.onPrev);
-    navigator.mediaSession.setActionHandler('nexttrack', handlers.onNext);
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (details.seekTime !== undefined) handlers.onSeek(details.seekTime);
-    });
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+      navigator.mediaSession.setActionHandler('play', handlers.onPlay);
+      navigator.mediaSession.setActionHandler('pause', handlers.onPause);
+      navigator.mediaSession.setActionHandler('previoustrack', handlers.onPrev);
+      navigator.mediaSession.setActionHandler('nexttrack', handlers.onNext);
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined) handlers.onSeek(details.seekTime);
+      });
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        const offset = details.seekOffset ?? 10;
+        handlers.onSeek(Math.max(0, (this.audio.currentTime || 0) - offset));
+      });
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        const offset = details.seekOffset ?? 10;
+        const maxDur = Number.isFinite(this.audio.duration) ? this.audio.duration : track.duration;
+        handlers.onSeek(Math.min(maxDur, (this.audio.currentTime || 0) + offset));
+      });
+    }
+
+    const safeDuration = Number.isFinite(this.audio.duration) && this.audio.duration > 0
+      ? this.audio.duration
+      : track.duration || 0;
+    const safePos = Math.min(this.audio.currentTime || 0, safeDuration);
+
+    this.updatePositionState(safePos, safeDuration, isPlaying, enabled);
+
+    if (nativePlugin?.updateSession) {
+      void nativePlugin
+        .updateSession({
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          artwork: track.coverArt ?? '',
+          isPlaying,
+          durationMs: Math.round(safeDuration * 1000),
+          positionMs: Math.round(safePos * 1000),
+        })
+        .catch(() => {});
+    }
+  }
+
+  updatePositionState(
+    positionSec: number,
+    durationSec: number,
+    isPlaying: boolean,
+    enabled: boolean
+  ): void {
+    if (!enabled) return;
+    if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+      if (Number.isFinite(durationSec) && durationSec > 0) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: durationSec,
+            playbackRate: isPlaying ? 1 : 0,
+            position: Math.max(0, Math.min(positionSec, durationSec)),
+          });
+        } catch {
+          // ignore unsupported browser edge cases
+        }
+      }
+    }
   }
 
   dispose(): void {

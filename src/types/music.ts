@@ -68,7 +68,16 @@ export interface EqSettings {
   bands: EqBands;
 }
 
-export type FontOption = 'system' | 'jakarta' | 'manrope' | 'serif' | 'mono';
+export type FontOption =
+  | 'system'
+  | 'arial'
+  | 'apple-music'
+  | 'jakarta'
+  | 'manrope'
+  | 'serif'
+  | 'mono';
+
+export type UiScaleOption = 0.85 | 0.92 | 1 | 1.1 | 1.2;
 
 export interface PersistedSettings {
   id: string;
@@ -77,6 +86,8 @@ export interface PersistedSettings {
   shuffle: boolean;
   repeat: RepeatMode;
   fontFamily: FontOption;
+  uiScale: UiScaleOption;
+  lockscreenWidget: boolean;
   eq: EqSettings;
   lastTrackId?: string;
 }

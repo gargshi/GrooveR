@@ -6,6 +6,7 @@ import {
   HardDrive,
   Heart,
   ListMusic,
+  Maximize2,
   Mic2,
   Play,
   Plus,
@@ -13,11 +14,12 @@ import {
   Settings,
   Shuffle,
   SlidersHorizontal,
+  Smartphone,
   Trash2,
   Type,
   Upload,
 } from 'lucide-react';
-import { FONT_PRESETS } from '../lib/fonts';
+import { FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
 import { formatBytes, formatDuration, isLosslessFormat } from '../lib/formatters';
 import {
   AlbumSummary,
@@ -30,6 +32,7 @@ import {
   SortField,
   StorageEstimateInfo,
   Track,
+  UiScaleOption,
 } from '../types/music';
 import { CoverArt } from './CoverArt';
 import { OfflineIndicator } from './OfflineIndicator';
@@ -68,6 +71,10 @@ interface LibraryViewsProps {
   onOpenSettings: () => void;
   fontFamily: FontOption;
   onSelectFont: (font: FontOption) => void;
+  uiScale: UiScaleOption;
+  onSelectUiScale: (scale: UiScaleOption) => void;
+  lockscreenWidget: boolean;
+  onToggleLockscreenWidget: (enabled: boolean) => void;
 }
 
 export const LibraryViews: React.FC<LibraryViewsProps> = ({
@@ -102,6 +109,10 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onOpenSettings,
   fontFamily,
   onSelectFont,
+  uiScale,
+  onSelectUiScale,
+  lockscreenWidget,
+  onToggleLockscreenWidget,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [songFilter, setSongFilter] = useState<SongFilter>('all');
@@ -1122,7 +1133,10 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     key={preset.id}
                     type="button"
                     onClick={() => onSelectFont(preset.id)}
-                    style={{ fontFamily: preset.cssStack }}
+                    style={{
+                      fontFamily: preset.cssStack,
+                      letterSpacing: preset.letterSpacing,
+                    }}
                     className={`min-h-[52px] px-3.5 py-2.5 rounded-xl text-left border transition-colors ${
                       selected
                         ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
@@ -1134,6 +1148,75 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* UI Scaling & Lockscreen Widget Settings */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Maximize2 className="w-4 h-4 text-[#2E8BFF]" />
+                  <div>
+                    <h2 className="text-sm font-semibold text-white">UI Scaling</h2>
+                    <p className="text-xs text-zinc-400">Adjust overall interface size</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono-nums text-[#64AEFF]">
+                  {Math.round(uiScale * 100)}%
+                </span>
+              </div>
+
+              <div className="grid grid-cols-5 gap-1.5">
+                {UI_SCALE_PRESETS.map((preset) => {
+                  const selected = uiScale === preset.value;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => onSelectUiScale(preset.value)}
+                      className={`min-h-[48px] px-2 py-1.5 rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                        selected
+                          ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                          : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                      }`}
+                    >
+                      <span className="text-xs font-semibold font-mono-nums">
+                        {preset.percentLabel}
+                      </span>
+                      <span className="text-[10px] text-zinc-400 mt-0.5">{preset.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <Smartphone className="w-5 h-5 text-[#2E8BFF] mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-white">Lockscreen Player Widget</h2>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Show artwork & transport controls on the OnePlus 15R lockscreen and notification shade via standard OS MediaSession.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={lockscreenWidget}
+                onClick={() => onToggleLockscreenWidget(!lockscreenWidget)}
+                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
+                  lockscreenWidget ? 'bg-[#2E8BFF]' : 'bg-white/15'
+                }`}
+                aria-label="Toggle lockscreen player widget"
+              >
+                <span
+                  className={`block w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    lockscreenWidget ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </div>
 
