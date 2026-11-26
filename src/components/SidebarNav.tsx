@@ -10,10 +10,11 @@ import {
   Settings,
   SlidersHorizontal,
 } from 'lucide-react';
-import { LibraryView, Playlist } from '../types/music';
+import { LibraryView, Playlist, UiTheme } from '../types/music';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface SidebarNavProps {
+  uiTheme?: UiTheme;
   activeView: LibraryView;
   onSelectView: (view: LibraryView) => void;
   playlists: Playlist[];
@@ -36,6 +37,7 @@ const NAV_ITEMS: Array<{ id: LibraryView; label: string; icon: React.ComponentTy
 ];
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({
+  uiTheme = 'groover',
   activeView,
   onSelectView,
   playlists,
@@ -49,7 +51,13 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   trackCount,
 }) => {
   return (
-    <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-[#0D0F14] border-r border-white/[0.07] h-full select-none">
+    <aside
+      className={`hidden lg:flex flex-col w-64 shrink-0 border-r h-full select-none ${
+        uiTheme === 'pivot'
+          ? 'bg-black border-white/[0.1]'
+          : 'bg-[#0D0F14] border-white/[0.07]'
+      }`}
+    >
       {/* Brand */}
       <div className="px-5 pt-6 pb-4 flex items-center justify-between">
         <button

@@ -184,7 +184,10 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Interactive Card Deck Stage */}
       <div className="lg:col-span-7 flex flex-col items-center space-y-5 py-2">
-        <div className="relative w-full max-w-[380px] sm:max-w-[420px] pt-2 pb-4 px-2">
+        <div
+          data-no-pivot-swipe="true"
+          className="relative w-full max-w-[380px] sm:max-w-[420px] pt-2 pb-4 px-2"
+        >
           {/* Layered Card Stack */}
           <div className="relative w-full aspect-[4/5] sm:aspect-[10/11] touch-pan-y select-none">
             {[...stackIndices].reverse().map((trackIdx, revPos) => {
@@ -460,7 +463,10 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
           )}
         </div>
 
-        <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[460px] pb-1 lg:pb-0 lg:pr-1">
+        <div
+          data-no-pivot-swipe="true"
+          className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[460px] pb-1 lg:pb-0 lg:pr-1"
+        >
           {tracks.map((trk, idx) => {
             const isSelected = idx === safeIndex;
             const isCurrent = trk.id === currentTrackId;

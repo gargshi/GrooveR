@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   uiScale: 1,
   lockscreenWidget: true,
   songsDisplayMode: 'list',
+  uiTheme: 'groover',
   eq: DEFAULT_EQ,
 };
 

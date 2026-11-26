@@ -81,6 +81,8 @@ export type UiScaleOption = 0.85 | 0.92 | 1 | 1.1 | 1.2;
 
 export type SongsDisplayMode = 'list' | 'deck';
 
+export type UiTheme = 'groover' | 'pivot';
+
 export interface PersistedSettings {
   id: string;
   volume: number;
@@ -92,6 +94,7 @@ export interface PersistedSettings {
   uiScale: UiScaleOption;
   lockscreenWidget: boolean;
   songsDisplayMode: SongsDisplayMode;
+  uiTheme: UiTheme;
   eq: EqSettings;
   lastTrackId?: string;
 }

@@ -27,6 +27,7 @@ interface TrackRowProps {
   onDelete: () => void;
   removeFromPlaylistLabel?: string;
   onRemoveFromPlaylist?: () => void;
+  isPivot?: boolean;
 }
 
 export const TrackRow: React.FC<TrackRowProps> = ({
@@ -44,51 +45,74 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   onDelete,
   removeFromPlaylistLabel,
   onRemoveFromPlaylist,
+  isPivot = false,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
-      className={`group relative flex items-center gap-3 px-3 sm:px-4 min-h-[64px] py-2 rounded-xl transition-colors ${
+      className={`group relative flex items-center gap-3 px-3 sm:px-4 min-h-[64px] py-2 transition-colors ${
+        isPivot ? 'rounded-none' : 'rounded-xl'
+      } ${
         isActive
-          ? 'bg-[#2E8BFF]/12'
+          ? isPivot
+            ? 'bg-[#1BA1E2]/12'
+            : 'bg-[#2E8BFF]/12'
           : 'hover:bg-white/[0.04]'
       }`}
     >
       {/* Index / Play button */}
-      <button
-        type="button"
-        onClick={onPlay}
-        className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-xs font-mono-nums text-zinc-500 hover:text-white shrink-0"
-        aria-label={`Play ${track.title}`}
-      >
-        {isActive && isPlaying ? (
-          <span className="text-[#2E8BFF] font-semibold">▶</span>
-        ) : (
-          <span className="group-hover:hidden">{index + 1}</span>
-        )}
-        {!(isActive && isPlaying) && (
-          <Play className="hidden group-hover:block w-3.5 h-3.5 fill-current text-white" />
-        )}
-      </button>
+      {!isPivot && (
+        <button
+          type="button"
+          onClick={onPlay}
+          className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-xs font-mono-nums text-zinc-500 hover:text-white shrink-0"
+          aria-label={`Play ${track.title}`}
+        >
+          {isActive && isPlaying ? (
+            <span className="text-[#2E8BFF] font-semibold">▶</span>
+          ) : (
+            <span className="group-hover:hidden">{index + 1}</span>
+          )}
+          {!(isActive && isPlaying) && (
+            <Play className="hidden group-hover:block w-3.5 h-3.5 fill-current text-white" />
+          )}
+        </button>
+      )}
 
       {/* Main clickable row area */}
       <button
         type="button"
         onClick={onPlay}
-        className="flex items-center gap-3 min-w-0 flex-1 text-left py-1 focus-visible:outline-none"
+        className="flex items-center gap-3.5 min-w-0 flex-1 text-left py-1 focus-visible:outline-none"
       >
-        <CoverArt
-          src={track.coverArt}
-          alt={track.album}
-          accentColor={track.accentColor}
-          className="w-11 h-11 rounded-xl"
-          iconSize="w-4 h-4"
-        />
+        <div className="relative shrink-0">
+          <CoverArt
+            src={track.coverArt}
+            alt={track.album}
+            accentColor={track.accentColor}
+            className={isPivot ? 'w-14 h-14 rounded-none' : 'w-11 h-11 rounded-xl'}
+            iconSize={isPivot ? 'w-5 h-5' : 'w-4 h-4'}
+          />
+          {isPivot && isActive && (
+            <div
+              className="absolute -right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black border-2 border-white flex items-center justify-center shadow"
+              aria-hidden="true"
+            >
+              <Play className="w-2.5 h-2.5 fill-white text-white ml-0.5" />
+            </div>
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <p
-            className={`text-sm font-semibold truncate ${
-              isActive ? 'text-[#64AEFF]' : 'text-white'
+            className={`truncate ${
+              isPivot ? 'text-base font-normal leading-snug' : 'text-sm font-semibold'
+            } ${
+              isActive
+                ? isPivot
+                  ? 'text-[#38BDF8]'
+                  : 'text-[#64AEFF]'
+                : 'text-white'
             }`}
           >
             {track.title}

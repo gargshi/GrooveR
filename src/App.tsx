@@ -39,6 +39,7 @@ import {
   Track,
   TrackMetadataUpdate,
   UiScaleOption,
+  UiTheme,
 } from './types/music';
 
 const AUDIO_EXT_REGEX = /\.(mp3|flac|wav|m4a|aac|ogg|opus|webm)$/i;
@@ -741,7 +742,9 @@ export default function App() {
 
   return (
     <div
-      className="h-dvh w-full flex flex-col bg-[#090A0D] text-[#F3F4F6] overflow-hidden select-none pt-safe"
+      className={`h-dvh w-full flex flex-col text-[#F3F4F6] overflow-hidden select-none pt-safe ${
+        settings.uiTheme === 'pivot' ? 'bg-black' : 'bg-[#090A0D]'
+      }`}
       onDragOver={(e) => {
         e.preventDefault();
         setIsDraggingFiles(true);
@@ -778,6 +781,7 @@ export default function App() {
       {/* Main Workspace */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         <SidebarNav
+          uiTheme={settings.uiTheme}
           activeView={activeView}
           onSelectView={(v) => {
             setActiveView(v);
@@ -854,6 +858,10 @@ export default function App() {
               onSelectSongsDisplayMode={(mode: SongsDisplayMode) =>
                 updateSettings((prev) => ({ ...prev, songsDisplayMode: mode }))
               }
+              uiTheme={settings.uiTheme}
+              onSelectUiTheme={(uiTheme: UiTheme) =>
+                updateSettings((prev) => ({ ...prev, uiTheme }))
+              }
               playbackRate={settings.playbackRate}
               activeTrackBitrateKbps={currentTrack?.bitrateKbps}
               onChangePlaybackRate={(rate: number) => {
@@ -869,6 +877,7 @@ export default function App() {
 
       {/* Desktop Bottom Player Bar */}
       <PlayerBar
+        uiTheme={settings.uiTheme}
         currentTrack={currentTrack}
         isPlaying={isPlaying}
         currentTime={currentTime}
@@ -913,6 +922,7 @@ export default function App() {
 
       {/* Mobile Mini-Player + Bottom Tab Bar */}
       <MobileBottomNav
+        uiTheme={settings.uiTheme}
         activeView={activeView}
         onSelectView={(v) => {
           setActiveView(v);
@@ -1009,6 +1019,7 @@ export default function App() {
         uiScale={settings.uiScale}
         lockscreenWidget={settings.lockscreenWidget}
         songsDisplayMode={settings.songsDisplayMode}
+        uiTheme={settings.uiTheme}
         playbackRate={settings.playbackRate}
         activeTrackBitrateKbps={currentTrack?.bitrateKbps}
         onSelectFont={(font: FontOption) =>
@@ -1022,6 +1033,9 @@ export default function App() {
         }
         onSelectSongsDisplayMode={(mode: SongsDisplayMode) =>
           updateSettings((prev) => ({ ...prev, songsDisplayMode: mode }))
+        }
+        onSelectUiTheme={(uiTheme: UiTheme) =>
+          updateSettings((prev) => ({ ...prev, uiTheme }))
         }
         onChangePlaybackRate={(rate: number) => {
           const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));

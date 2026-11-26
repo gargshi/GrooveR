@@ -1,9 +1,10 @@
 import React from 'react';
 import { Disc, HardDrive, ListMusic, Music2, Pause, Play, SkipForward } from 'lucide-react';
-import { LibraryView, Track } from '../types/music';
+import { LibraryView, Track, UiTheme } from '../types/music';
 import { CoverArt } from './CoverArt';
 
 interface MobileBottomNavProps {
+  uiTheme?: UiTheme;
   activeView: LibraryView;
   onSelectView: (view: LibraryView) => void;
   currentTrack: Track | null;
@@ -26,6 +27,7 @@ const MOBILE_TABS: Array<{
 ];
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
+  uiTheme = 'groover',
   activeView,
   onSelectView,
   currentTrack,
@@ -35,8 +37,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onNext,
   onOpenNowPlaying,
 }) => {
+  const isPivot = uiTheme === 'pivot';
+  if (isPivot && !currentTrack) return null;
+
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D0F14]/95 backdrop-blur-xl border-t border-white/[0.08] pb-safe">
+    <div
+      className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t pb-safe ${
+        isPivot
+          ? 'bg-black/95 border-white/[0.12]'
+          : 'bg-[#0D0F14]/95 border-white/[0.08]'
+      }`}
+    >
       {/* Compact Mini-Player */}
       {currentTrack && (
         <div className="relative border-b border-white/[0.06]">
@@ -93,29 +104,31 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         </div>
       )}
 
-      {/* 4-Tab Thumb Bar */}
-      <nav className="grid grid-cols-4 items-center h-[56px]" aria-label="Mobile navigation">
-        {MOBILE_TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive =
-            activeView === tab.id || (tab.id === 'songs' && activeView === 'artists');
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => onSelectView(tab.id)}
-              className={`flex flex-col items-center justify-center min-h-[48px] transition-colors ${
-                isActive ? 'text-[#2E8BFF]' : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="text-[11px] font-medium tracking-tight mt-0.5 whitespace-nowrap">
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* 4-Tab Thumb Bar (hidden in Metro Pivot mode since Pivot header handles navigation) */}
+      {!isPivot && (
+        <nav className="grid grid-cols-4 items-center h-[56px]" aria-label="Mobile navigation">
+          {MOBILE_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive =
+              activeView === tab.id || (tab.id === 'songs' && activeView === 'artists');
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onSelectView(tab.id)}
+                className={`flex flex-col items-center justify-center min-h-[48px] transition-colors ${
+                  isActive ? 'text-[#2E8BFF]' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-[11px] font-medium tracking-tight mt-0.5 whitespace-nowrap">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 };

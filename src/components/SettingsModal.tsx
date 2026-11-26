@@ -3,6 +3,7 @@ import {
   Check,
   Gauge,
   Layers,
+  LayoutGrid,
   List,
   Maximize2,
   RotateCcw,
@@ -12,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
-import { FontOption, SongsDisplayMode, UiScaleOption } from '../types/music';
+import { FontOption, SongsDisplayMode, UiScaleOption, UiTheme } from '../types/music';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,12 +21,14 @@ interface SettingsModalProps {
   uiScale: UiScaleOption;
   lockscreenWidget: boolean;
   songsDisplayMode: SongsDisplayMode;
+  uiTheme: UiTheme;
   playbackRate: number;
   activeTrackBitrateKbps?: number;
   onSelectFont: (font: FontOption) => void;
   onSelectUiScale: (scale: UiScaleOption) => void;
   onToggleLockscreenWidget: (enabled: boolean) => void;
   onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
+  onSelectUiTheme: (theme: UiTheme) => void;
   onChangePlaybackRate: (rate: number) => void;
   onOpenEq: () => void;
   onClose: () => void;
@@ -37,12 +40,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   uiScale,
   lockscreenWidget,
   songsDisplayMode,
+  uiTheme,
   playbackRate,
   activeTrackBitrateKbps,
   onSelectFont,
   onSelectUiScale,
   onToggleLockscreenWidget,
   onSelectSongsDisplayMode,
+  onSelectUiTheme,
   onChangePlaybackRate,
   onOpenEq,
   onClose,
@@ -166,7 +171,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             ? 'none'
             : 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
         }}
-        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 px-5 sm:px-6 pb-5 sm:pb-6 pt-0 shadow-2xl space-y-5 max-h-[88vh] overflow-y-auto pb-safe"
+        className={`w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl border border-white/10 px-5 sm:px-6 pb-5 sm:pb-6 pt-0 shadow-2xl space-y-5 max-h-[88vh] overflow-y-auto pb-safe ${
+          uiTheme === 'pivot' ? 'bg-black' : 'bg-[#12151C]'
+        }`}
       >
         {/* Slide-to-dismiss top white handle bar + header drag zone */}
         <div
@@ -174,7 +181,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           onPointerMove={handleHandlePointerMove}
           onPointerUp={handleHandlePointerEnd}
           onPointerCancel={handleHandlePointerEnd}
-          className="sticky top-0 z-10 bg-[#12151C] -mx-5 sm:-mx-6 px-5 sm:px-6 pt-3 pb-2 touch-none select-none cursor-grab active:cursor-grabbing border-b border-white/[0.06]"
+          className={`sticky top-0 z-10 -mx-5 sm:-mx-6 px-5 sm:px-6 pt-3 pb-2 touch-none select-none cursor-grab active:cursor-grabbing border-b border-white/[0.06] ${
+            uiTheme === 'pivot' ? 'bg-black' : 'bg-[#12151C]'
+          }`}
         >
           <div
             className="w-12 h-1.5 bg-white/85 rounded-full mx-auto mb-3 shadow-sm"
@@ -185,7 +194,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div>
               <h2 className="font-display text-lg font-bold text-white">Settings</h2>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Library Layout, Typography, Scale & Lockscreen
+                Theme, Layout, Speed, Typography & Lockscreen
               </p>
             </div>
             <button
@@ -195,6 +204,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               aria-label="Close settings"
             >
               <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Interface Theme Selector */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+            <LayoutGrid className="w-4 h-4 text-[#2E8BFF]" />
+            <span>Interface Theme</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onSelectUiTheme('groover')}
+              className={`min-h-[52px] px-3.5 py-2.5 rounded-xl border transition-colors text-left ${
+                uiTheme === 'groover'
+                  ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+              }`}
+            >
+              <p className="text-xs font-semibold">GrooveR Dark</p>
+              <p className="text-[11px] text-zinc-400 truncate mt-0.5">Modern slate & bottom tabs</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectUiTheme('pivot')}
+              className={`min-h-[52px] px-3.5 py-2.5 rounded-xl border transition-colors text-left ${
+                uiTheme === 'pivot'
+                  ? 'bg-[#1BA1E2]/18 border-[#1BA1E2]/60 text-white'
+                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+              }`}
+            >
+              <p className="text-xs font-semibold">Metro Pivot</p>
+              <p className="text-[11px] text-zinc-400 truncate mt-0.5">Swipe headers & A–Z tiles</p>
             </button>
           </div>
         </div>

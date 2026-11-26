@@ -16,10 +16,11 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { formatDuration } from '../lib/formatters';
-import { RepeatMode, Track } from '../types/music';
+import { RepeatMode, Track, UiTheme } from '../types/music';
 import { CoverArt } from './CoverArt';
 
 interface PlayerBarProps {
+  uiTheme?: UiTheme;
   currentTrack: Track | null;
   isPlaying: boolean;
   currentTime: number;
@@ -45,6 +46,7 @@ interface PlayerBarProps {
 }
 
 export const PlayerBar: React.FC<PlayerBarProps> = ({
+  uiTheme = 'groover',
   currentTrack,
   isPlaying,
   currentTime,
@@ -72,7 +74,13 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
   const progress = safeDuration > 0 ? Math.min(100, (currentTime / safeDuration) * 100) : 0;
 
   return (
-    <footer className="hidden lg:grid grid-cols-[minmax(220px,1fr)_minmax(340px,1.4fr)_minmax(220px,1fr)] items-center h-20 px-5 bg-[#0D0F14]/95 backdrop-blur-xl border-t border-white/[0.08] shrink-0 z-30">
+    <footer
+      className={`hidden lg:grid grid-cols-[minmax(220px,1fr)_minmax(340px,1.4fr)_minmax(220px,1fr)] items-center h-20 px-5 backdrop-blur-xl border-t shrink-0 z-30 ${
+        uiTheme === 'pivot'
+          ? 'bg-black/95 border-white/[0.12]'
+          : 'bg-[#0D0F14]/95 border-white/[0.08]'
+      }`}
+    >
       {/* Left: Track summary */}
       <div className="flex items-center gap-3 min-w-0">
         {currentTrack ? (
