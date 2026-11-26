@@ -767,8 +767,7 @@ export default function App() {
         ref={folderInputRef}
         type="file"
         multiple
-        // @ts-expect-error webkitdirectory is supported on Chromium/Android/Safari
-        webkitdirectory=""
+        {...({ webkitdirectory: '' } as React.InputHTMLAttributes<HTMLInputElement>)}
         className="hidden"
         onChange={(e) => {
           if (e.target.files?.length) void processImportedFiles(e.target.files);
