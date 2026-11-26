@@ -87,13 +87,17 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
           const h = canvas.height;
           ctx.clearRect(0, 0, w, h);
 
+          const styles = getComputedStyle(document.documentElement);
+          const peakColor = styles.getPropertyValue('--accent-soft').trim() || '#64AEFF';
+          const dimColor = styles.getPropertyValue('--accent-dim').trim() || 'rgba(46, 139, 255, 0.55)';
+
           const barWidth = (w - (bins.length - 1) * 4) / bins.length;
           bins.forEach((val, idx) => {
             const norm = isPlaying ? Math.max(0.08, val) : 0.08;
             const barH = Math.max(3, norm * (h - 4));
             const x = idx * (barWidth + 4);
             const y = h - barH;
-            ctx.fillStyle = val > 0.55 ? '#64AEFF' : 'rgba(46, 139, 255, 0.55)';
+            ctx.fillStyle = val > 0.55 ? peakColor : dimColor;
             ctx.beginPath();
             ctx.roundRect(x, y, barWidth, barH, 2);
             ctx.fill();
@@ -136,7 +140,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             type="button"
             onClick={() => setPanelTab('art')}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-              panelTab === 'art' ? 'bg-[#2E8BFF] text-white' : 'text-zinc-400 hover:text-white'
+              panelTab === 'art' ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]' : 'text-zinc-400 hover:text-white'
             }`}
           >
             Now Playing
@@ -145,7 +149,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             type="button"
             onClick={() => setPanelTab('queue')}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-              panelTab === 'queue' ? 'bg-[#2E8BFF] text-white' : 'text-zinc-400 hover:text-white'
+              panelTab === 'queue' ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]' : 'text-zinc-400 hover:text-white'
             }`}
           >
             Up Next ({queueTracks.length})
@@ -197,7 +201,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
                   onClick={() => onPlayQueueIndex(idx)}
                   className={`w-full min-h-[56px] px-3 py-2 rounded-xl flex items-center gap-3 text-left transition-colors ${
                     isCurrent
-                      ? 'bg-[#2E8BFF]/15 border border-[#2E8BFF]/30'
+                      ? 'bg-[var(--accent-tint)] border border-[var(--accent-border)]'
                       : 'hover:bg-white/[0.05]'
                   }`}
                 >
@@ -212,7 +216,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
                     iconSize="w-4 h-4"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#64AEFF]' : 'text-white'}`}>
+                    <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[var(--accent-soft)]' : 'text-white'}`}>
                       {trk.title}
                     </p>
                     <p className="text-xs text-zinc-400 truncate">
@@ -249,7 +253,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               onClick={() => onToggleFavorite(currentTrack.id)}
               className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl transition-colors shrink-0 ${
                 currentTrack.isFavorite
-                  ? 'text-[#2E8BFF] bg-[#2E8BFF]/15'
+                  ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]'
                   : 'text-zinc-400 hover:text-white bg-white/[0.04]'
               }`}
               aria-label={currentTrack.isFavorite ? 'Remove favorite' : 'Favorite track'}
@@ -263,7 +267,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             <div className="relative h-6 flex items-center">
               <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
                 <div
-                  className="h-full bg-[#2E8BFF]"
+                  className="h-full bg-[var(--accent-primary)]"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -290,7 +294,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               type="button"
               onClick={onToggleShuffle}
               className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl transition-colors ${
-                shuffle ? 'text-[#2E8BFF] bg-[#2E8BFF]/15' : 'text-zinc-400 hover:text-white'
+                shuffle ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
               }`}
               aria-label="Shuffle"
             >
@@ -309,7 +313,8 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             <button
               type="button"
               onClick={onTogglePlay}
-              className="w-16 h-16 rounded-full bg-[#2E8BFF] hover:bg-[#1E7AE8] text-white flex items-center justify-center shadow-lg shadow-[#2E8BFF]/25 active:scale-95 transition-transform"
+              className="w-16 h-16 rounded-full bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] flex items-center justify-center shadow-lg active:scale-95 transition-all"
+              style={{ boxShadow: '0 10px 24px -4px var(--accent-glow)' }}
               aria-label={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? (
@@ -332,7 +337,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               type="button"
               onClick={onCycleRepeat}
               className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl transition-colors ${
-                repeat !== 'off' ? 'text-[#2E8BFF] bg-[#2E8BFF]/15' : 'text-zinc-400 hover:text-white'
+                repeat !== 'off' ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
               }`}
               aria-label="Repeat"
             >
@@ -347,7 +352,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               onClick={onOpenEq}
               className="min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/[0.05] transition-colors whitespace-nowrap"
             >
-              <SlidersHorizontal className="w-4 h-4 text-[#2E8BFF]" />
+              <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Equalizer</span>
             </button>
 
@@ -356,7 +361,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               onClick={onCycleSleepTimer}
               className={`min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium transition-colors whitespace-nowrap ${
                 sleepRemainingMin !== null
-                  ? 'text-[#2E8BFF] bg-[#2E8BFF]/15'
+                  ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]'
                   : 'text-zinc-300 hover:text-white hover:bg-white/[0.05]'
               }`}
             >

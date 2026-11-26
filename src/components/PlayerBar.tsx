@@ -88,7 +88,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             <button
               type="button"
               onClick={onOpenNowPlaying}
-              className="group relative rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E8BFF]"
+              className="group relative rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
               aria-label="Open Now Playing"
             >
               <CoverArt
@@ -102,7 +102,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
               <button
                 type="button"
                 onClick={onOpenNowPlaying}
-                className="block text-left text-sm font-semibold text-white hover:text-[#64AEFF] transition-colors truncate max-w-full"
+                className="block text-left text-sm font-semibold text-white hover:text-[var(--accent-soft)] transition-colors truncate max-w-full"
               >
                 {currentTrack.title}
               </button>
@@ -115,7 +115,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
               onClick={() => onToggleFavorite(currentTrack.id)}
               className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors shrink-0 ${
                 currentTrack.isFavorite
-                  ? 'text-[#2E8BFF] hover:bg-[#2E8BFF]/10'
+                  ? 'text-[var(--accent-primary)] hover:bg-[var(--accent-tint)]'
                   : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05]'
               }`}
               aria-label={currentTrack.isFavorite ? 'Remove favorite' : 'Add favorite'}
@@ -141,7 +141,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onToggleShuffle}
             className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg transition-colors ${
-              shuffle ? 'text-[#2E8BFF] bg-[#2E8BFF]/10' : 'text-zinc-400 hover:text-white'
+              shuffle ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
             }`}
             aria-label="Toggle shuffle"
             title="Shuffle"
@@ -187,7 +187,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onCycleRepeat}
             className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg transition-colors ${
-              repeat !== 'off' ? 'text-[#2E8BFF] bg-[#2E8BFF]/10' : 'text-zinc-400 hover:text-white'
+              repeat !== 'off' ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
             }`}
             aria-label={`Repeat mode: ${repeat}`}
             title={`Repeat: ${repeat}`}
@@ -203,7 +203,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           <div className="relative flex-1 h-4 flex items-center">
             <div className="w-full h-1 rounded-full bg-white/15 overflow-hidden">
               <div
-                className="h-full bg-[#2E8BFF]"
+                className="h-full bg-[var(--accent-primary)]"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -232,7 +232,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           onClick={onCycleSleepTimer}
           className={`min-h-[38px] px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
             sleepRemainingMin !== null
-              ? 'text-[#2E8BFF] bg-[#2E8BFF]/15'
+              ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]'
               : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
           }`}
           title="Sleep timer"

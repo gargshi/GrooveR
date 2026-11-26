@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  Check,
   Download,
   FolderPlus,
   Gauge,
@@ -12,6 +13,7 @@ import {
   ListMusic,
   Maximize2,
   Mic2,
+  Palette,
   Play,
   Plus,
   RotateCcw,
@@ -25,11 +27,12 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
+import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
 import { formatBytes, formatDuration, isLosslessFormat } from '../lib/formatters';
 import {
   AlbumSummary,
   ArtistSummary,
+  ButtonColorScheme,
   FontOption,
   LibraryView,
   Playlist,
@@ -120,6 +123,8 @@ interface LibraryViewsProps {
   onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
   uiTheme: UiTheme;
   onSelectUiTheme: (theme: UiTheme) => void;
+  buttonColorScheme: ButtonColorScheme;
+  onSelectButtonColorScheme: (scheme: ButtonColorScheme) => void;
   playbackRate: number;
   activeTrackBitrateKbps?: number;
   onChangePlaybackRate: (rate: number) => void;
@@ -166,6 +171,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onSelectSongsDisplayMode,
   uiTheme,
   onSelectUiTheme,
+  buttonColorScheme,
+  onSelectButtonColorScheme,
   playbackRate,
   activeTrackBitrateKbps,
   onChangePlaybackRate,
@@ -557,7 +564,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             </div>
 
             {isImporting && importProgressText && (
-              <p className="text-xs font-mono-nums text-[#64AEFF]">{importProgressText}</p>
+              <p className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</p>
             )}
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -565,10 +572,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 type="button"
                 onClick={onImportFiles}
                 disabled={isImporting}
-                className={`min-h-[48px] px-5 text-white text-sm font-semibold inline-flex items-center gap-2 transition-colors whitespace-nowrap ${
-                  isPivot
-                    ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                    : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                className={`min-h-[48px] px-5 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-sm font-semibold inline-flex items-center gap-2 transition-colors whitespace-nowrap ${
+                  isPivot ? 'rounded-none' : 'rounded-xl'
                 }`}
               >
                 <Upload className="w-4 h-4 shrink-0" />
@@ -642,7 +647,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
                 aria-label="Open equalizer"
               >
-                <SlidersHorizontal className="w-4 h-4 text-[#2E8BFF]" />
+                <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
               </button>
               <button
                 type="button"
@@ -655,7 +660,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
               <button
                 type="button"
                 onClick={onImportFiles}
-                className="min-h-[44px] px-3.5 rounded-xl bg-[#2E8BFF] text-white text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap"
+                className="min-h-[44px] px-3.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add</span>
@@ -672,12 +677,12 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search songs, albums, artists, or genres"
-                className="w-full min-h-[42px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#2E8BFF]"
+                className="w-full min-h-[42px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
               />
             </div>
             <div className="flex items-center gap-3">
               {isImporting && importProgressText && (
-                <span className="text-xs font-mono-nums text-[#64AEFF]">{importProgressText}</span>
+                <span className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</span>
               )}
               <OfflineIndicator />
             </div>
@@ -692,7 +697,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search offline library"
-                className="w-full min-h-[44px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#2E8BFF]"
+                className="w-full min-h-[44px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
               />
             </div>
           )}
@@ -700,7 +705,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       )}
 
       {isPivot && isImporting && importProgressText && (
-        <p className="text-xs font-mono-nums text-[#1BA1E2]">{importProgressText}</p>
+        <p className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</p>
       )}
 
       <div
@@ -731,10 +736,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 type="button"
                 disabled={filteredSongs.length === 0}
                 onClick={() => onPlayTrackList(filteredSongs, 0)}
-                className={`min-h-[44px] px-4 disabled:opacity-40 text-white text-xs font-semibold inline-flex items-center gap-2 transition-colors whitespace-nowrap ${
-                  isPivot
-                    ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                    : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                className={`min-h-[44px] px-4 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors whitespace-nowrap ${
+                  isPivot ? 'rounded-none' : 'rounded-xl'
                 }`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
@@ -779,7 +782,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   } ${
                     songFilter === tab.id
                       ? isPivot
-                        ? 'bg-[#1BA1E2] text-white'
+                        ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]'
                         : 'bg-white/10 text-white'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
@@ -806,9 +809,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     isPivot ? 'rounded-none' : 'rounded-lg'
                   } ${
                     songsDisplayMode === 'list'
-                      ? isPivot
-                        ? 'bg-[#1BA1E2] text-white'
-                        : 'bg-[#2E8BFF] text-white'
+                      ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                   aria-pressed={songsDisplayMode === 'list'}
@@ -824,9 +825,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     isPivot ? 'rounded-none' : 'rounded-lg'
                   } ${
                     songsDisplayMode === 'deck'
-                      ? isPivot
-                        ? 'bg-[#1BA1E2] text-white'
-                        : 'bg-[#2E8BFF] text-white'
+                      ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                   aria-pressed={songsDisplayMode === 'deck'}
@@ -852,10 +851,10 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 aria-label="Sort songs by"
                 value={sortField}
                 onChange={(e) => setSortField(e.target.value as SortField)}
-                className={`min-h-[38px] px-3 border text-xs text-zinc-200 focus:outline-none ${
+                className={`min-h-[38px] px-3 border text-xs text-zinc-200 focus:outline-none focus:border-[var(--accent-primary)] ${
                   isPivot
-                    ? 'rounded-none bg-black border-white/20 focus:border-[#1BA1E2]'
-                    : 'rounded-xl bg-[#111318] border-white/[0.08] focus:border-[#2E8BFF]'
+                    ? 'rounded-none bg-black border-white/20'
+                    : 'rounded-xl bg-[#111318] border-white/[0.08]'
                 }`}
               >
                 <option value="addedAt">Date Added</option>
@@ -921,7 +920,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   <button
                     type="button"
                     onClick={() => setPivotJumpOpen('songs')}
-                    className="w-11 h-11 bg-[#1BA1E2] text-white text-2xl font-light lowercase flex items-end justify-start pl-2 pb-1 rounded-none hover:brightness-110 transition"
+                    className="w-11 h-11 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-2xl font-light lowercase flex items-end justify-start pl-2 pb-1 rounded-none transition"
                     aria-label={`Jump to letter from ${group.letter}`}
                   >
                     {group.letter}
@@ -1044,10 +1043,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     <button
                       type="button"
                       onClick={() => onPlayTrackList(activeAlbum.tracks, 0)}
-                      className={`min-h-[44px] px-5 text-white text-xs font-semibold inline-flex items-center gap-2 ${
-                        isPivot
-                          ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                          : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                      className={`min-h-[44px] px-5 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                        isPivot ? 'rounded-none' : 'rounded-xl'
                       }`}
                     >
                       <Play className="w-4 h-4 fill-current" />
@@ -1110,7 +1107,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     <button
                       type="button"
                       onClick={() => setPivotJumpOpen('albums')}
-                      className="w-11 h-11 bg-[#1BA1E2] text-white text-2xl font-light lowercase flex items-end justify-start pl-2 pb-1 rounded-none hover:brightness-110 transition"
+                      className="w-11 h-11 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-2xl font-light lowercase flex items-end justify-start pl-2 pb-1 rounded-none transition"
                       aria-label={`Jump to album letter from ${group.letter}`}
                     >
                       {group.letter}
@@ -1144,7 +1141,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-xl font-normal leading-snug text-white group-hover:text-[#1BA1E2] transition-colors line-clamp-2">
+                              <p className="text-xl font-normal leading-snug text-white group-hover:text-[var(--accent-soft)] transition-colors line-clamp-2">
                                 {alb.album}
                               </p>
                               <p className="text-sm text-zinc-400 truncate mt-0.5">
@@ -1184,7 +1181,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                       className="w-full aspect-square rounded-xl mb-3"
                       iconSize="w-10 h-10"
                     />
-                    <p className="text-sm font-semibold text-white truncate group-hover:text-[#64AEFF] transition-colors">
+                    <p className="text-sm font-semibold text-white truncate group-hover:text-[var(--accent-soft)] transition-colors">
                       {alb.album}
                     </p>
                     <p className="text-xs text-zinc-400 truncate mt-0.5">{alb.albumArtist}</p>
@@ -1241,10 +1238,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   <button
                     type="button"
                     onClick={() => onPlayTrackList(activeArtist.tracks, 0)}
-                    className={`min-h-[44px] px-5 text-white text-xs font-semibold inline-flex items-center gap-2 ${
-                      isPivot
-                        ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                        : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                    className={`min-h-[44px] px-5 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                      isPivot ? 'rounded-none' : 'rounded-xl'
                     }`}
                   >
                     <Play className="w-4 h-4 fill-current" />
@@ -1296,7 +1291,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     <button
                       type="button"
                       onClick={() => setPivotJumpOpen('artists')}
-                      className="w-11 h-11 bg-[#1BA1E2] text-white text-2xl font-light lowercase flex items-end justify-start pl-2 pb-1 rounded-none hover:brightness-110 transition"
+                      className="w-11 h-11 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-2xl font-light lowercase flex items-end justify-start pl-2 pb-1 rounded-none transition"
                       aria-label={`Jump to artist letter from ${group.letter}`}
                     >
                       {group.letter}
@@ -1330,7 +1325,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-xl font-normal leading-snug text-white group-hover:text-[#1BA1E2] transition-colors truncate">
+                              <p className="text-xl font-normal leading-snug text-white group-hover:text-[var(--accent-soft)] transition-colors truncate">
                                 {art.name}
                               </p>
                               <p className="text-sm text-zinc-400 font-mono-nums truncate mt-0.5">
@@ -1429,10 +1424,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                           type="button"
                           disabled={plTracks.length === 0}
                           onClick={() => onPlayTrackList(plTracks, 0)}
-                          className={`min-h-[44px] px-4 disabled:opacity-40 text-white text-xs font-semibold inline-flex items-center gap-2 ${
-                            isPivot
-                              ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                              : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                          className={`min-h-[44px] px-4 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                            isPivot ? 'rounded-none' : 'rounded-xl'
                           }`}
                         >
                           <Play className="w-4 h-4 fill-current" />
@@ -1544,10 +1537,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     type="button"
                     disabled={smartMixTracks.length === 0}
                     onClick={() => onPlayTrackList(smartMixTracks, 0)}
-                    className={`min-h-[44px] px-5 disabled:opacity-40 text-white text-xs font-semibold inline-flex items-center gap-2 ${
-                      isPivot
-                        ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                        : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                    className={`min-h-[44px] px-5 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                      isPivot ? 'rounded-none' : 'rounded-xl'
                     }`}
                   >
                     <Play className="w-4 h-4 fill-current" />
@@ -1598,10 +1589,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   <button
                     type="button"
                     onClick={onCreatePlaylist}
-                    className={`min-h-[44px] px-4 text-white text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap ${
-                      isPivot
-                        ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                        : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                    className={`min-h-[44px] px-4 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-colors ${
+                      isPivot ? 'rounded-none' : 'rounded-xl'
                     }`}
                   >
                     <Plus className="w-4 h-4" />
@@ -1616,11 +1605,11 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     onClick={() => setSelectedSmartMix('favorites')}
                     className={`p-4 border text-left transition-colors space-y-2 ${
                       isPivot
-                        ? 'rounded-none bg-black border-white/15 hover:border-[#1BA1E2]'
+                        ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
                         : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
                     }`}
                   >
-                    <Heart className={`w-5 h-5 ${isPivot ? 'text-[#1BA1E2]' : 'text-[#2E8BFF]'}`} />
+                    <Heart className="w-5 h-5 text-[var(--accent-primary)]" />
                     <div>
                       <p className="text-sm font-semibold text-white">Favorites Mix</p>
                       <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
@@ -1634,7 +1623,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     onClick={() => setSelectedSmartMix('recent')}
                     className={`p-4 border text-left transition-colors space-y-2 ${
                       isPivot
-                        ? 'rounded-none bg-black border-white/15 hover:border-[#1BA1E2]'
+                        ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
                         : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
                     }`}
                   >
@@ -1652,7 +1641,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     onClick={() => setSelectedSmartMix('most-played')}
                     className={`p-4 border text-left transition-colors space-y-2 ${
                       isPivot
-                        ? 'rounded-none bg-black border-white/15 hover:border-[#1BA1E2]'
+                        ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
                         : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
                     }`}
                   >
@@ -1701,7 +1690,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                             onClick={() => onSelectPlaylist(pl.id)}
                             className={`flex items-center gap-3.5 p-3.5 border text-left transition-colors ${
                               isPivot
-                                ? 'rounded-none bg-black border-white/15 hover:border-[#1BA1E2]'
+                                ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
                                 : 'rounded-2xl bg-[#111318] border-white/[0.06] hover:border-white/20'
                             }`}
                           >
@@ -1750,10 +1739,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 type="button"
                 onClick={onImportFiles}
                 disabled={isImporting}
-                className={`min-h-[44px] px-4 text-white text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap ${
-                  isPivot
-                    ? 'rounded-none bg-[#1BA1E2] hover:brightness-110'
-                    : 'rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8]'
+                className={`min-h-[44px] px-4 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-colors ${
+                  isPivot ? 'rounded-none' : 'rounded-xl'
                 }`}
               >
                 <Upload className="w-4 h-4" />
@@ -1782,7 +1769,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <LayoutGrid className={`w-4 h-4 ${isPivot ? 'text-[#1BA1E2]' : 'text-[#2E8BFF]'}`} />
+              <LayoutGrid className="w-4 h-4 text-[var(--accent-primary)]" />
               <div>
                 <h2 className="text-sm font-semibold text-white">Interface Theme</h2>
                 <p className="text-xs text-zinc-400">
@@ -1799,7 +1786,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   isPivot ? 'rounded-none' : 'rounded-xl'
                 } ${
                   uiTheme === 'groover'
-                    ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/45 text-white'
+                    ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                     : 'bg-[#0D0F14] border-white/[0.08] text-zinc-300 hover:border-white/20'
                 }`}
               >
@@ -1813,13 +1800,62 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   isPivot ? 'rounded-none' : 'rounded-xl'
                 } ${
                   uiTheme === 'pivot'
-                    ? 'bg-[#1BA1E2]/20 border-[#1BA1E2] text-white'
+                    ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                     : 'bg-[#0D0F14] border-white/[0.08] text-zinc-300 hover:border-white/20'
                 }`}
               >
                 <p className="text-sm font-semibold">Metro Pivot</p>
                 <p className="text-[11px] text-zinc-400 mt-0.5">Panoramic swipe headers & tiles</p>
               </button>
+            </div>
+          </div>
+
+          {/* Button Color Scheme Selector */}
+          <div
+            className={`p-5 border space-y-3 ${
+              isPivot
+                ? 'rounded-none bg-black border-white/15'
+                : 'rounded-2xl bg-[#111318] border-white/[0.07]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Palette className="w-4 h-4 text-[var(--accent-primary)]" />
+              <div>
+                <h2 className="text-sm font-semibold text-white">Button Color Scheme</h2>
+                <p className="text-xs text-zinc-400">
+                  Customize accent colors for buttons, toggles, and active controls
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {BUTTON_COLOR_PRESETS.map((preset) => {
+                const selected = buttonColorScheme === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => onSelectButtonColorScheme(preset.id)}
+                    className={`min-h-[48px] px-3.5 py-2 flex items-center justify-between gap-2 text-left border transition-colors ${
+                      isPivot ? 'rounded-none' : 'rounded-xl'
+                    } ${
+                      selected
+                        ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
+                        : 'bg-[#0D0F14] border-white/[0.08] text-zinc-300 hover:border-white/20'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="w-4 h-4 rounded-full shrink-0 border border-white/25"
+                        style={{ backgroundColor: preset.primary }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-semibold truncate">{preset.label}</span>
+                    </span>
+                    {selected && <Check className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1834,7 +1870,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <HardDrive className={`w-5 h-5 ${isPivot ? 'text-[#1BA1E2]' : 'text-[#2E8BFF]'}`} />
+                  <HardDrive className="w-5 h-5 text-[var(--accent-primary)]" />
                   <span className="text-sm font-semibold text-white">Device IndexedDB Vault</span>
                 </div>
                 <span className="text-xs font-mono-nums text-zinc-400">
@@ -1845,8 +1881,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
 
               <div className={`w-full h-2.5 bg-white/[0.07] overflow-hidden ${isPivot ? 'rounded-none' : 'rounded-full'}`}>
                 <div
-                  className={`h-full transition-[width] duration-300 ${
-                    isPivot ? 'bg-[#1BA1E2] rounded-none' : 'bg-[#2E8BFF] rounded-full'
+                  className={`h-full bg-[var(--accent-primary)] transition-[width] duration-300 ${
+                    isPivot ? 'rounded-none' : 'rounded-full'
                   }`}
                   style={{
                     width: `${Math.min(
@@ -1904,7 +1940,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     isPivot ? 'rounded-none border border-white/15' : 'rounded-xl'
                   }`}
                 >
-                  <Download className={`w-4 h-4 ${isPivot ? 'text-[#1BA1E2]' : 'text-[#2E8BFF]'}`} />
+                  <Download className="w-4 h-4 text-[var(--accent-primary)]" />
                   <span>Export Library JSON</span>
                 </button>
               </div>
@@ -1915,7 +1951,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
           <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <Type className="w-4 h-4 text-[#2E8BFF]" />
+                <Type className="w-4 h-4 text-[var(--accent-primary)]" />
                 <div>
                   <h2 className="text-sm font-semibold text-white">Typography</h2>
                   <p className="text-xs text-zinc-400">
@@ -1939,7 +1975,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     }}
                     className={`min-h-[52px] px-3.5 py-2.5 rounded-xl text-left border transition-colors ${
                       selected
-                        ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                        ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                         : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
                     }`}
                   >
@@ -1956,13 +1992,13 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <Maximize2 className="w-4 h-4 text-[#2E8BFF]" />
+                  <Maximize2 className="w-4 h-4 text-[var(--accent-primary)]" />
                   <div>
                     <h2 className="text-sm font-semibold text-white">UI Scaling</h2>
                     <p className="text-xs text-zinc-400">Adjust overall interface size</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono-nums text-[#64AEFF]">
+                <span className="text-xs font-mono-nums text-[var(--accent-soft)]">
                   {Math.round(uiScale * 100)}%
                 </span>
               </div>
@@ -1977,7 +2013,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                       onClick={() => onSelectUiScale(preset.value)}
                       className={`min-h-[48px] px-2 py-1.5 rounded-xl flex flex-col items-center justify-center border transition-colors ${
                         selected
-                          ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                          ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                           : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
                       }`}
                     >
@@ -1993,7 +2029,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
 
             <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] flex items-center justify-between gap-4">
               <div className="flex items-start gap-3 min-w-0">
-                <Smartphone className="w-5 h-5 text-[#2E8BFF] mt-0.5 shrink-0" />
+                <Smartphone className="w-5 h-5 text-[var(--accent-primary)] mt-0.5 shrink-0" />
                 <div className="min-w-0">
                   <h2 className="text-sm font-semibold text-white">Lockscreen Player Widget</h2>
                   <p className="text-xs text-zinc-400 mt-1">
@@ -2007,7 +2043,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 aria-checked={lockscreenWidget}
                 onClick={() => onToggleLockscreenWidget(!lockscreenWidget)}
                 className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
-                  lockscreenWidget ? 'bg-[#2E8BFF]' : 'bg-white/15'
+                  lockscreenWidget ? 'bg-[var(--accent-primary)]' : 'bg-white/15'
                 }`}
                 aria-label="Toggle lockscreen player widget"
               >
@@ -2032,7 +2068,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
               <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <Gauge className="w-4 h-4 text-[#2E8BFF]" />
+                    <Gauge className="w-4 h-4 text-[var(--accent-primary)]" />
                     <div>
                       <h2 className="text-sm font-semibold text-white">Global Song Speed (bits/sec)</h2>
                       <p className="text-xs text-zinc-400">
@@ -2041,7 +2077,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono-nums text-[#64AEFF]">
+                    <span className="text-xs font-mono-nums text-[var(--accent-soft)]">
                       {currentBps.toLocaleString()} bps · {playbackRate.toFixed(2)}×
                     </span>
                     {Math.abs(playbackRate - 1) > 0.005 && (
@@ -2060,7 +2096,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 <div className="relative h-9 flex items-center" data-no-pivot-swipe="true">
                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-[#2E3545] border border-white/20 overflow-hidden pointer-events-none">
                     <div
-                      className={`h-full rounded-full ${isPivot ? 'bg-[#1BA1E2]' : 'bg-[#2E8BFF]'}`}
+                      className="h-full bg-[var(--accent-primary)] rounded-full"
                       style={{
                         width: `${Math.min(100, Math.max(0, ((playbackRate - 0.5) / 1.5) * 100))}%`,
                       }}
@@ -2102,7 +2138,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     key={fmt}
                     className="p-3.5 rounded-xl bg-[#0D0F14] border border-white/[0.06]"
                   >
-                    <p className="text-xs font-mono-nums font-semibold text-[#64AEFF]">{fmt}</p>
+                    <p className="text-xs font-mono-nums font-semibold text-[var(--accent-soft)]">{fmt}</p>
                     <p className="text-base font-bold font-mono-nums text-white mt-1">
                       {info.count} {info.count === 1 ? 'file' : 'files'}
                     </p>
@@ -2194,7 +2230,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   onClick={() => handleJumpToLetter(letter)}
                   className={`aspect-square flex items-end justify-start pl-3 pb-2 text-2xl sm:text-3xl font-light lowercase rounded-none transition ${
                     hasItems
-                      ? 'bg-[#1BA1E2] text-white hover:brightness-110 active:scale-95'
+                      ? 'bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] active:scale-95'
                       : 'bg-[#12151B] text-zinc-600 cursor-default'
                   }`}
                 >

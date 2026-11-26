@@ -72,7 +72,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({
             placeholder="Night Drive Mix"
             required
             autoFocus
-            className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#2E8BFF]"
+            className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
           />
         </label>
 
@@ -83,7 +83,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Lossless FLAC favorites for commute"
-            className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#2E8BFF]"
+            className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
           />
         </label>
 
@@ -98,7 +98,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({
           <button
             type="submit"
             disabled={saving || !name.trim()}
-            className="min-h-[44px] px-5 rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8] text-sm font-semibold text-white disabled:opacity-50"
+            className="min-h-[44px] px-5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-sm font-semibold text-[var(--accent-contrast)] disabled:opacity-50"
           >
             {saving ? 'Saving...' : mode === 'create' ? 'Create Playlist' : 'Save'}
           </button>

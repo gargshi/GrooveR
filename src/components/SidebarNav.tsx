@@ -63,7 +63,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         <button
           type="button"
           onClick={() => onSelectView('songs')}
-          className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E8BFF] rounded-lg"
+          className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] rounded-lg"
         >
           <span className="font-display text-xl font-bold tracking-tight text-white whitespace-nowrap">
             GrooveR
@@ -79,7 +79,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         <button
           type="button"
           onClick={onImportFiles}
-          className="w-full min-h-[44px] px-4 py-2 rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+          className="w-full min-h-[44px] px-4 py-2 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-sm font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
         >
           <Plus className="w-4 h-4 shrink-0" />
           <span>Add Music Files</span>
@@ -106,11 +106,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               onClick={() => onSelectView(item.id)}
               className={`w-full min-h-[44px] px-3 rounded-xl flex items-center gap-3 text-sm font-medium transition-colors whitespace-nowrap ${
                 isActive
-                  ? 'bg-[#2E8BFF]/15 text-white'
+                  ? 'bg-[var(--accent-tint)] text-white'
                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#2E8BFF]' : 'text-zinc-500'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[var(--accent-primary)]' : 'text-zinc-500'}`} />
               <span>{item.label}</span>
             </button>
           );
@@ -168,7 +168,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
           className="w-full min-h-[42px] px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 text-xs font-medium flex items-center justify-between transition-colors whitespace-nowrap"
         >
           <span className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-[#2E8BFF]" />
+            <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>5-Band Equalizer</span>
           </span>
           <span className="text-zinc-500">DSP</span>

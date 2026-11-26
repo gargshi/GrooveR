@@ -55,9 +55,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         isPivot ? 'rounded-none' : 'rounded-xl'
       } ${
         isActive
-          ? isPivot
-            ? 'bg-[#1BA1E2]/12'
-            : 'bg-[#2E8BFF]/12'
+          ? 'bg-[var(--accent-tint)]'
           : 'hover:bg-white/[0.04]'
       }`}
     >
@@ -70,7 +68,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           aria-label={`Play ${track.title}`}
         >
           {isActive && isPlaying ? (
-            <span className="text-[#2E8BFF] font-semibold">▶</span>
+            <span className="text-[var(--accent-primary)] font-semibold">▶</span>
           ) : (
             <span className="group-hover:hidden">{index + 1}</span>
           )}
@@ -109,9 +107,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               isPivot ? 'text-base font-normal leading-snug' : 'text-sm font-semibold'
             } ${
               isActive
-                ? isPivot
-                  ? 'text-[#38BDF8]'
-                  : 'text-[#64AEFF]'
+                ? 'text-[var(--accent-soft)]'
                 : 'text-white'
             }`}
           >
@@ -141,7 +137,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           onClick={onToggleFavorite}
           className={`min-h-[44px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors ${
             track.isFavorite
-              ? 'text-[#2E8BFF]'
+              ? 'text-[var(--accent-primary)]'
               : 'text-zinc-500 hover:text-zinc-200 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'
           }`}
           aria-label={track.isFavorite ? 'Remove favorite' : 'Add favorite'}

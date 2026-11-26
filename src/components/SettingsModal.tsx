@@ -6,14 +6,15 @@ import {
   LayoutGrid,
   List,
   Maximize2,
+  Palette,
   RotateCcw,
   SlidersHorizontal,
   Smartphone,
   Type,
   X,
 } from 'lucide-react';
-import { FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
-import { FontOption, SongsDisplayMode, UiScaleOption, UiTheme } from '../types/music';
+import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
+import { ButtonColorScheme, FontOption, SongsDisplayMode, UiScaleOption, UiTheme } from '../types/music';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface SettingsModalProps {
   lockscreenWidget: boolean;
   songsDisplayMode: SongsDisplayMode;
   uiTheme: UiTheme;
+  buttonColorScheme: ButtonColorScheme;
   playbackRate: number;
   activeTrackBitrateKbps?: number;
   onSelectFont: (font: FontOption) => void;
@@ -29,6 +31,7 @@ interface SettingsModalProps {
   onToggleLockscreenWidget: (enabled: boolean) => void;
   onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
   onSelectUiTheme: (theme: UiTheme) => void;
+  onSelectButtonColorScheme: (scheme: ButtonColorScheme) => void;
   onChangePlaybackRate: (rate: number) => void;
   onOpenEq: () => void;
   onClose: () => void;
@@ -41,6 +44,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   lockscreenWidget,
   songsDisplayMode,
   uiTheme,
+  buttonColorScheme,
   playbackRate,
   activeTrackBitrateKbps,
   onSelectFont,
@@ -48,6 +52,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleLockscreenWidget,
   onSelectSongsDisplayMode,
   onSelectUiTheme,
+  onSelectButtonColorScheme,
   onChangePlaybackRate,
   onOpenEq,
   onClose,
@@ -211,7 +216,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Interface Theme Selector */}
         <div className="space-y-2.5">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-            <LayoutGrid className="w-4 h-4 text-[#2E8BFF]" />
+            <LayoutGrid className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>Interface Theme</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -220,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectUiTheme('groover')}
               className={`min-h-[52px] px-3.5 py-2.5 rounded-xl border transition-colors text-left ${
                 uiTheme === 'groover'
-                  ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                   : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
               }`}
             >
@@ -232,7 +237,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectUiTheme('pivot')}
               className={`min-h-[52px] px-3.5 py-2.5 rounded-xl border transition-colors text-left ${
                 uiTheme === 'pivot'
-                  ? 'bg-[#1BA1E2]/18 border-[#1BA1E2]/60 text-white'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                   : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
               }`}
             >
@@ -242,10 +247,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
+        {/* Button Color Scheme Setting */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+            <Palette className="w-4 h-4 text-[var(--accent-primary)]" />
+            <span>Button Color Scheme</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {BUTTON_COLOR_PRESETS.map((preset) => {
+              const selected = buttonColorScheme === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => onSelectButtonColorScheme(preset.id)}
+                  className={`min-h-[48px] px-3 py-2 rounded-xl flex items-center justify-between gap-2 border transition-colors text-left ${
+                    selected
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
+                      : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="w-4 h-4 rounded-full shrink-0 border border-white/25"
+                      style={{ backgroundColor: preset.primary }}
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs font-semibold truncate">{preset.label}</span>
+                  </span>
+                  {selected && <Check className="w-3.5 h-3.5 text-[var(--accent-primary)] shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Songs Display Layout Setting */}
         <div className="space-y-2.5">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-            <Layers className="w-4 h-4 text-[#2E8BFF]" />
+            <Layers className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>Songs Screen Display</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -254,11 +294,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectSongsDisplayMode('list')}
               className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
                 songsDisplayMode === 'list'
-                  ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                   : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
               }`}
             >
-              <List className="w-4 h-4 text-[#2E8BFF] shrink-0" />
+              <List className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold">Song List</p>
                 <p className="text-[11px] text-zinc-400 truncate">Compact rows</p>
@@ -269,11 +309,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectSongsDisplayMode('deck')}
               className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
                 songsDisplayMode === 'deck'
-                  ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                   : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
               }`}
             >
-              <Layers className="w-4 h-4 text-[#2E8BFF] shrink-0" />
+              <Layers className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold">Deck of Cards</p>
                 <p className="text-[11px] text-zinc-400 truncate">Swipeable stack</p>
@@ -286,11 +326,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="p-3.5 rounded-xl bg-[#0D0F14] border border-white/[0.07] space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-              <Gauge className="w-4 h-4 text-[#2E8BFF]" />
+              <Gauge className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Global Song Speed</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono-nums text-[#64AEFF]">
+              <span className="text-xs font-mono-nums text-[var(--accent-soft)]">
                 {currentBps.toLocaleString()} bps · {playbackRate.toFixed(2)}×
               </span>
               {Math.abs(playbackRate - 1) > 0.005 && (
@@ -310,7 +350,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="relative h-9 flex items-center">
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-[#2E3545] border border-white/20 overflow-hidden pointer-events-none">
               <div
-                className="h-full bg-[#2E8BFF] rounded-full"
+                className="h-full bg-[var(--accent-primary)] rounded-full"
                 style={{
                   width: `${Math.min(100, Math.max(0, ((playbackRate - 0.5) / 1.5) * 100))}%`,
                 }}
@@ -344,10 +384,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-              <Maximize2 className="w-4 h-4 text-[#2E8BFF]" />
+              <Maximize2 className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>UI Scaling</span>
             </div>
-            <span className="text-xs font-mono-nums text-[#64AEFF]">
+            <span className="text-xs font-mono-nums text-[var(--accent-soft)]">
               {Math.round(uiScale * 100)}%
             </span>
           </div>
@@ -362,7 +402,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => onSelectUiScale(preset.value)}
                   className={`min-h-[48px] px-2 py-2 rounded-xl flex flex-col items-center justify-center border transition-colors ${
                     selected
-                      ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                       : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
                   }`}
                 >
@@ -377,7 +417,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Lockscreen Player Widget Toggle */}
         <div className="p-3.5 rounded-xl bg-[#0D0F14] border border-white/[0.07] flex items-center justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <Smartphone className="w-4 h-4 text-[#2E8BFF] mt-0.5 shrink-0" />
+            <Smartphone className="w-4 h-4 text-[var(--accent-primary)] mt-0.5 shrink-0" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white">Lockscreen Player Widget</p>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -391,7 +431,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             aria-checked={lockscreenWidget}
             onClick={() => onToggleLockscreenWidget(!lockscreenWidget)}
             className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
-              lockscreenWidget ? 'bg-[#2E8BFF]' : 'bg-white/15'
+              lockscreenWidget ? 'bg-[var(--accent-primary)]' : 'bg-white/15'
             }`}
             aria-label="Toggle lockscreen player widget"
           >
@@ -406,7 +446,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Font Setting */}
         <div className="space-y-2.5">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-            <Type className="w-4 h-4 text-[#2E8BFF]" />
+            <Type className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>App Font</span>
           </div>
 
@@ -420,7 +460,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => onSelectFont(preset.id)}
                   className={`w-full min-h-[54px] px-3.5 py-2.5 rounded-xl flex items-center justify-between gap-3 text-left border transition-colors ${
                     selected
-                      ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/40 text-white'
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                       : 'bg-[#0D0F14] border-white/[0.06] text-zinc-200 hover:border-white/15'
                   }`}
                 >
@@ -434,7 +474,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <p className="text-sm font-semibold truncate">{preset.label}</p>
                     <p className="text-xs text-zinc-400 truncate mt-0.5">{preset.description}</p>
                   </div>
-                  {selected && <Check className="w-4 h-4 text-[#2E8BFF] shrink-0" />}
+                  {selected && <Check className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />}
                 </button>
               );
             })}
@@ -452,7 +492,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             className="w-full min-h-[46px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-sm font-medium text-white flex items-center justify-between transition-colors"
           >
             <span className="flex items-center gap-2.5">
-              <SlidersHorizontal className="w-4 h-4 text-[#2E8BFF]" />
+              <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>5-Band Equalizer</span>
             </span>
             <span className="text-xs text-zinc-400">Open DSP</span>

@@ -19,7 +19,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ compact = fa
       <button
         type="button"
         onClick={() => void install()}
-        className={`inline-flex items-center justify-center gap-2 rounded-xl bg-[#2E8BFF]/15 text-[#64AEFF] border border-[#2E8BFF]/30 hover:bg-[#2E8BFF]/25 transition-colors whitespace-nowrap shrink-0 min-h-[44px] ${
+        className={`inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent-tint)] text-[var(--accent-soft)] border border-[var(--accent-border)] hover:brightness-110 transition-colors whitespace-nowrap shrink-0 min-h-[44px] ${
           compact ? 'px-3 text-xs font-medium' : 'px-4 py-2 text-xs font-semibold w-full'
         }`}
       >
@@ -65,7 +65,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ compact = fa
               <button
                 type="button"
                 onClick={() => setShowIOSGuide(false)}
-                className="mt-5 w-full min-h-[44px] rounded-xl bg-[#2E8BFF] text-sm font-semibold text-white hover:bg-[#1D78EC] transition-colors"
+                className="mt-5 w-full min-h-[44px] rounded-xl bg-[var(--accent-primary)] text-sm font-semibold text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] transition-colors"
               >
                 Got it
               </button>

@@ -54,7 +54,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           {/* Hairline seek indicator */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
             <div
-              className="h-full bg-[#2E8BFF] transition-[width] duration-150 ease-linear"
+              className="h-full bg-[var(--accent-primary)] transition-[width] duration-150 ease-linear"
               style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
             />
           </div>
@@ -117,7 +117,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 type="button"
                 onClick={() => onSelectView(tab.id)}
                 className={`flex flex-col items-center justify-center min-h-[48px] transition-colors ${
-                  isActive ? 'text-[#2E8BFF]' : 'text-zinc-400 hover:text-zinc-200'
+                  isActive ? 'text-[var(--accent-primary)]' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 <Icon className="w-5 h-5" />

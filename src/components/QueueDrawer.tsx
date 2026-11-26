@@ -74,7 +74,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                   key={`${trk.id}-${idx}`}
                   className={`flex items-center gap-2.5 p-2 rounded-xl transition-colors ${
                     isCurrent
-                      ? 'bg-[#2E8BFF]/15 border border-[#2E8BFF]/30'
+                      ? 'bg-[var(--accent-tint)] border border-[var(--accent-border)]'
                       : 'hover:bg-white/[0.04]'
                   }`}
                 >
@@ -91,7 +91,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                       iconSize="w-4 h-4"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#64AEFF]' : 'text-white'}`}>
+                      <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[var(--accent-soft)]' : 'text-white'}`}>
                         {trk.title}
                       </p>
                       <p className="text-xs text-zinc-400 truncate">

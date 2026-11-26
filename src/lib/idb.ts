@@ -1,4 +1,4 @@
-import { EqSettings, PersistedSettings, Playlist, StorageEstimateInfo, Track } from '../types/music';
+import { ButtonColorScheme, EqSettings, PersistedSettings, Playlist, StorageEstimateInfo, Track } from '../types/music';
 
 const DB_NAME = 'groover_offline_db';
 const DB_VERSION = 1;
@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   lockscreenWidget: true,
   songsDisplayMode: 'list',
   uiTheme: 'groover',
+  buttonColorScheme: 'blue',
   eq: DEFAULT_EQ,
 };
 
@@ -237,9 +238,14 @@ export async function loadSettings(): Promise<PersistedSettings> {
     (tx) => tx.objectStore(STORE_SETTINGS).get('app-settings')
   );
   if (!stored) return DEFAULT_SETTINGS;
+  const validSchemes: ButtonColorScheme[] = ['blue', 'cyan', 'emerald', 'crimson', 'amber', 'orange'];
+  const buttonColorScheme = validSchemes.includes(stored.buttonColorScheme)
+    ? stored.buttonColorScheme
+    : DEFAULT_SETTINGS.buttonColorScheme;
   return {
     ...DEFAULT_SETTINGS,
     ...stored,
+    buttonColorScheme,
     playbackRate:
       typeof stored.playbackRate === 'number' && Number.isFinite(stored.playbackRate)
         ? Math.min(2, Math.max(0.5, stored.playbackRate))

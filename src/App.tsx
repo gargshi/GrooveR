@@ -10,7 +10,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SidebarNav } from './components/SidebarNav';
 import { TrackEditorModal } from './components/TrackEditorModal';
 import { GrooveAudioEngine } from './lib/audioEngine';
-import { applyAppFont, applyUiScale } from './lib/fonts';
+import { applyAppFont, applyButtonColorScheme, applyUiScale } from './lib/fonts';
 import {
   clearOfflineLibrary,
   DEFAULT_SETTINGS,
@@ -28,6 +28,7 @@ import {
 } from './lib/idb';
 import { parseAudioFileToTrack } from './lib/metadataParser';
 import {
+  ButtonColorScheme,
   EqSettings,
   FontOption,
   LibraryView,
@@ -75,6 +76,11 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  // Shuffle playback history & non-repeating cycle tracking (track-ID based)
+  const shuffleHistoryIdsRef = useRef<string[]>([]);
+  const shuffleHistoryPosRef = useRef<number>(-1);
+  const shufflePlayedIdsRef = useRef<Set<string>>(new Set());
 
   // Overlays & Modals
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
@@ -136,6 +142,7 @@ export default function App() {
         setSettings(loadedSettings);
         applyAppFont(loadedSettings.fontFamily);
         applyUiScale(loadedSettings.uiScale);
+        applyButtonColorScheme(loadedSettings.buttonColorScheme);
         engine.setVolume(loadedSettings.volume, loadedSettings.isMuted);
         engine.setPlaybackRate(loadedSettings.playbackRate);
         engine.applyEq(loadedSettings.eq);
@@ -147,6 +154,10 @@ export default function App() {
             const idx = sortedTracks.findIndex((t) => t.id === loadedSettings.lastTrackId);
             if (idx >= 0) {
               setCurrentQueueIndex(idx);
+              const seedId = sortedTracks[idx].id;
+              shuffleHistoryIdsRef.current = [seedId];
+              shuffleHistoryPosRef.current = 0;
+              shufflePlayedIdsRef.current = new Set([seedId]);
               const blob = await getTrackAudioBlob(sortedTracks[idx].id);
               if (blob && !cancelled) {
                 await engine.loadBlob(blob, false);
@@ -165,7 +176,7 @@ export default function App() {
     };
   }, [engine, refreshStorageStats]);
 
-  // Apply active font, UI scale, and playback speed whenever changed
+  // Apply active font, UI scale, button color scheme, and playback speed whenever changed
   useEffect(() => {
     applyAppFont(settings.fontFamily);
   }, [settings.fontFamily]);
@@ -175,8 +186,57 @@ export default function App() {
   }, [settings.uiScale]);
 
   useEffect(() => {
+    applyButtonColorScheme(settings.buttonColorScheme);
+  }, [settings.buttonColorScheme]);
+
+  useEffect(() => {
     engine.setPlaybackRate(settings.playbackRate);
   }, [engine, settings.playbackRate]);
+
+  // Auto-hide scrollbars after 5 seconds of inactivity; reveal immediately on any action
+  useEffect(() => {
+    let hideTimer: number | null = null;
+    const root = document.documentElement;
+
+    const scheduleHide = () => {
+      if (root.classList.contains('scrollbars-hidden')) {
+        root.classList.remove('scrollbars-hidden');
+      }
+      if (hideTimer !== null) {
+        window.clearTimeout(hideTimer);
+      }
+      hideTimer = window.setTimeout(() => {
+        root.classList.add('scrollbars-hidden');
+      }, 5000);
+    };
+
+    scheduleHide();
+
+    const passiveEvents: Array<keyof WindowEventMap> = [
+      'wheel',
+      'touchstart',
+      'touchmove',
+      'pointerdown',
+      'pointermove',
+      'keydown',
+    ];
+
+    window.addEventListener('scroll', scheduleHide, { capture: true, passive: true });
+    for (const ev of passiveEvents) {
+      window.addEventListener(ev, scheduleHide, { passive: true });
+    }
+
+    return () => {
+      if (hideTimer !== null) {
+        window.clearTimeout(hideTimer);
+      }
+      root.classList.remove('scrollbars-hidden');
+      window.removeEventListener('scroll', scheduleHide, true);
+      for (const ev of passiveEvents) {
+        window.removeEventListener(ev, scheduleHide);
+      }
+    };
+  }, []);
 
   // Persist settings helper
   const updateSettings = useCallback(
@@ -207,7 +267,11 @@ export default function App() {
   }, [queueTracks, currentQueueIndex]);
 
   const playQueueAtIndex = useCallback(
-    async (idx: number, customQueue?: string[]) => {
+    async (
+      idx: number,
+      customQueue?: string[],
+      historyMode: 'reset' | 'push' | 'preserve' = 'push'
+    ) => {
       const targetQueue = customQueue ?? queueIds;
       if (idx < 0 || idx >= targetQueue.length) return;
       const trackId = targetQueue[idx];
@@ -218,6 +282,23 @@ export default function App() {
       if (!blob) {
         showToast('Audio file missing from offline vault');
         return;
+      }
+
+      if (customQueue || historyMode === 'reset') {
+        shuffleHistoryIdsRef.current = [trackId];
+        shuffleHistoryPosRef.current = 0;
+        shufflePlayedIdsRef.current = new Set([trackId]);
+      } else if (historyMode === 'push') {
+        const truncated = shuffleHistoryIdsRef.current.slice(
+          0,
+          Math.max(0, shuffleHistoryPosRef.current + 1)
+        );
+        if (truncated[truncated.length - 1] !== trackId) {
+          truncated.push(trackId);
+        }
+        shuffleHistoryIdsRef.current = truncated;
+        shuffleHistoryPosRef.current = truncated.length - 1;
+        shufflePlayedIdsRef.current.add(trackId);
       }
 
       setCurrentQueueIndex(idx);
@@ -246,6 +327,22 @@ export default function App() {
     [queueIds, trackMap, engine, settings.eq, settings.volume, settings.isMuted, settings.playbackRate, showToast, updateSettings]
   );
 
+  const handleToggleShuffle = useCallback(() => {
+    updateSettings((prev) => {
+      const nextShuffle = !prev.shuffle;
+      if (nextShuffle) {
+        const seedId =
+          currentQueueIndex >= 0 && currentQueueIndex < queueIds.length
+            ? queueIds[currentQueueIndex]
+            : undefined;
+        shuffleHistoryIdsRef.current = seedId ? [seedId] : [];
+        shuffleHistoryPosRef.current = seedId ? 0 : -1;
+        shufflePlayedIdsRef.current = new Set(seedId ? [seedId] : []);
+      }
+      return { ...prev, shuffle: nextShuffle };
+    });
+  }, [currentQueueIndex, queueIds, updateSettings]);
+
   const handleNext = useCallback(() => {
     if (queueTracks.length === 0) return;
 
@@ -255,25 +352,79 @@ export default function App() {
       return;
     }
 
-    if (settings.shuffle && queueTracks.length > 1) {
-      let nextIdx = currentQueueIndex;
-      while (nextIdx === currentQueueIndex) {
-        nextIdx = Math.floor(Math.random() * queueTracks.length);
+    if (settings.shuffle && queueIds.length > 1) {
+      // If user stepped backward in shuffle history, Next moves deterministically forward through visited history
+      while (shuffleHistoryPosRef.current < shuffleHistoryIdsRef.current.length - 1) {
+        shuffleHistoryPosRef.current += 1;
+        const targetId = shuffleHistoryIdsRef.current[shuffleHistoryPosRef.current];
+        const targetIdx = queueIds.indexOf(targetId);
+        if (targetIdx >= 0) {
+          void playQueueAtIndex(targetIdx, undefined, 'preserve');
+          return;
+        }
       }
-      void playQueueAtIndex(nextIdx);
+
+      // Ensure active track is marked as played in the current non-repeating cycle
+      const activeId =
+        currentQueueIndex >= 0 && currentQueueIndex < queueIds.length
+          ? queueIds[currentQueueIndex]
+          : undefined;
+      if (activeId) {
+        shufflePlayedIdsRef.current.add(activeId);
+      }
+
+      let unplayedIndices: number[] = [];
+      for (let i = 0; i < queueIds.length; i++) {
+        if (i !== currentQueueIndex && !shufflePlayedIdsRef.current.has(queueIds[i])) {
+          unplayedIndices.push(i);
+        }
+      }
+
+      // Once every song in the queue has played, start a fresh non-repeating cycle without immediate repeat
+      if (unplayedIndices.length === 0) {
+        shufflePlayedIdsRef.current = new Set(activeId ? [activeId] : []);
+        unplayedIndices = [];
+        for (let i = 0; i < queueIds.length; i++) {
+          if (i !== currentQueueIndex) {
+            unplayedIndices.push(i);
+          }
+        }
+      }
+
+      if (unplayedIndices.length > 0) {
+        const nextIdx = unplayedIndices[Math.floor(Math.random() * unplayedIndices.length)];
+        const nextId = queueIds[nextIdx];
+        shufflePlayedIdsRef.current.add(nextId);
+        const prefix = shuffleHistoryIdsRef.current.slice(
+          0,
+          Math.max(0, shuffleHistoryPosRef.current + 1)
+        );
+        prefix.push(nextId);
+        shuffleHistoryIdsRef.current = prefix;
+        shuffleHistoryPosRef.current = prefix.length - 1;
+        void playQueueAtIndex(nextIdx, undefined, 'preserve');
+      }
       return;
     }
 
     const nextIdx = currentQueueIndex + 1;
     if (nextIdx < queueTracks.length) {
-      void playQueueAtIndex(nextIdx);
+      void playQueueAtIndex(nextIdx, undefined, 'push');
     } else if (settings.repeat === 'all') {
-      void playQueueAtIndex(0);
+      void playQueueAtIndex(0, undefined, 'push');
     } else {
       engine.pause();
       setIsPlaying(false);
     }
-  }, [queueTracks.length, settings.repeat, settings.shuffle, currentQueueIndex, engine, playQueueAtIndex]);
+  }, [
+    queueTracks.length,
+    queueIds,
+    settings.repeat,
+    settings.shuffle,
+    currentQueueIndex,
+    engine,
+    playQueueAtIndex,
+  ]);
 
   const handlePrev = useCallback(() => {
     if (queueTracks.length === 0) return;
@@ -282,14 +433,40 @@ export default function App() {
       setCurrentTime(0);
       return;
     }
+
+    if (settings.shuffle) {
+      // Deterministic backward navigation through actual played songs (never randomized)
+      while (shuffleHistoryPosRef.current > 0) {
+        shuffleHistoryPosRef.current -= 1;
+        const targetId = shuffleHistoryIdsRef.current[shuffleHistoryPosRef.current];
+        const targetIdx = queueIds.indexOf(targetId);
+        if (targetIdx >= 0) {
+          void playQueueAtIndex(targetIdx, undefined, 'preserve');
+          return;
+        }
+      }
+      engine.seek(0);
+      setCurrentTime(0);
+      return;
+    }
+
     const prevIdx =
       currentQueueIndex - 1 >= 0
         ? currentQueueIndex - 1
         : settings.repeat === 'all'
         ? queueTracks.length - 1
         : 0;
-    void playQueueAtIndex(prevIdx);
-  }, [queueTracks.length, currentTime, currentQueueIndex, settings.repeat, engine, playQueueAtIndex]);
+    void playQueueAtIndex(prevIdx, undefined, 'push');
+  }, [
+    queueTracks.length,
+    queueIds,
+    currentTime,
+    currentQueueIndex,
+    settings.shuffle,
+    settings.repeat,
+    engine,
+    playQueueAtIndex,
+  ]);
 
   const handleTogglePlay = useCallback(async () => {
     if (!currentTrack) {
@@ -501,7 +678,7 @@ export default function App() {
       const ids = list.map((t) => t.id);
       setQueueIds(ids);
       setTimeout(() => {
-        void playQueueAtIndex(startIndex, ids);
+        void playQueueAtIndex(startIndex, ids, 'reset');
       }, 0);
     },
     [playQueueAtIndex]
@@ -518,7 +695,7 @@ export default function App() {
       updateSettings((prev) => ({ ...prev, shuffle: true }));
       setQueueIds(ids);
       setTimeout(() => {
-        void playQueueAtIndex(0, ids);
+        void playQueueAtIndex(0, ids, 'reset');
       }, 0);
     },
     [updateSettings, playQueueAtIndex]
@@ -719,6 +896,9 @@ export default function App() {
     setPlaylists([]);
     setQueueIds([]);
     setCurrentQueueIndex(-1);
+    shuffleHistoryIdsRef.current = [];
+    shuffleHistoryPosRef.current = -1;
+    shufflePlayedIdsRef.current.clear();
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
@@ -862,6 +1042,10 @@ export default function App() {
               onSelectUiTheme={(uiTheme: UiTheme) =>
                 updateSettings((prev) => ({ ...prev, uiTheme }))
               }
+              buttonColorScheme={settings.buttonColorScheme}
+              onSelectButtonColorScheme={(buttonColorScheme: ButtonColorScheme) =>
+                updateSettings((prev) => ({ ...prev, buttonColorScheme }))
+              }
               playbackRate={settings.playbackRate}
               activeTrackBitrateKbps={currentTrack?.bitrateKbps}
               onChangePlaybackRate={(rate: number) => {
@@ -903,9 +1087,7 @@ export default function App() {
           engine.setVolume(settings.volume, nextMuted);
           updateSettings((prev) => ({ ...prev, isMuted: nextMuted }));
         }}
-        onToggleShuffle={() =>
-          updateSettings((prev) => ({ ...prev, shuffle: !prev.shuffle }))
-        }
+        onToggleShuffle={handleToggleShuffle}
         onCycleRepeat={() =>
           updateSettings((prev) => {
             const order: RepeatMode[] = ['off', 'all', 'one'];
@@ -957,9 +1139,7 @@ export default function App() {
           engine.seek(t);
           setCurrentTime(t);
         }}
-        onToggleShuffle={() =>
-          updateSettings((prev) => ({ ...prev, shuffle: !prev.shuffle }))
-        }
+        onToggleShuffle={handleToggleShuffle}
         onCycleRepeat={() =>
           updateSettings((prev) => {
             const order: RepeatMode[] = ['off', 'all', 'one'];
@@ -1000,6 +1180,9 @@ export default function App() {
           setIsPlaying(false);
           setQueueIds([]);
           setCurrentQueueIndex(-1);
+          shuffleHistoryIdsRef.current = [];
+          shuffleHistoryPosRef.current = -1;
+          shufflePlayedIdsRef.current.clear();
         }}
         onClose={() => setIsQueueOpen(false)}
       />
@@ -1020,6 +1203,7 @@ export default function App() {
         lockscreenWidget={settings.lockscreenWidget}
         songsDisplayMode={settings.songsDisplayMode}
         uiTheme={settings.uiTheme}
+        buttonColorScheme={settings.buttonColorScheme}
         playbackRate={settings.playbackRate}
         activeTrackBitrateKbps={currentTrack?.bitrateKbps}
         onSelectFont={(font: FontOption) =>
@@ -1036,6 +1220,9 @@ export default function App() {
         }
         onSelectUiTheme={(uiTheme: UiTheme) =>
           updateSettings((prev) => ({ ...prev, uiTheme }))
+        }
+        onSelectButtonColorScheme={(buttonColorScheme: ButtonColorScheme) =>
+          updateSettings((prev) => ({ ...prev, buttonColorScheme }))
         }
         onChangePlaybackRate={(rate: number) => {
           const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));
@@ -1066,7 +1253,7 @@ export default function App() {
       {/* Drag & Drop Overlay */}
       {isDraggingFiles && (
         <div className="fixed inset-0 z-50 bg-[#090A0D]/90 backdrop-blur-md flex items-center justify-center p-6 pointer-events-none">
-          <div className="max-w-md w-full rounded-3xl border-2 border-dashed border-[#2E8BFF] bg-[#111318] p-10 text-center space-y-2">
+          <div className="max-w-md w-full rounded-3xl border-2 border-dashed border-[var(--accent-primary)] bg-[#111318] p-10 text-center space-y-2">
             <p className="font-display text-xl font-bold text-white">Drop audio files to import</p>
             <p className="text-sm text-zinc-400">
               MP3, FLAC, M4A, WAV, and OGG tracks are stored offline in your vault.

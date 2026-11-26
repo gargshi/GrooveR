@@ -116,7 +116,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               onClick={() => artInputRef.current?.click()}
               className="min-h-[40px] px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-xs font-medium text-white inline-flex items-center gap-2 transition-colors whitespace-nowrap"
             >
-              <ImagePlus className="w-4 h-4 text-[#2E8BFF]" />
+              <ImagePlus className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Change Album Art</span>
             </button>
             {coverArt && (
@@ -139,7 +139,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
@@ -149,7 +149,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               type="text"
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
@@ -159,7 +159,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               type="text"
               value={album}
               onChange={(e) => setAlbum(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
@@ -169,7 +169,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               type="text"
               value={albumArtist}
               onChange={(e) => setAlbumArtist(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
@@ -179,7 +179,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               type="text"
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
@@ -190,7 +190,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               maxLength={4}
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white font-mono-nums focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white font-mono-nums focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
@@ -202,7 +202,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               max={999}
               value={trackNumber}
               onChange={(e) => setTrackNumber(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white font-mono-nums focus:outline-none focus:border-[#2E8BFF]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white font-mono-nums focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
         </div>
@@ -218,7 +218,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
           <button
             type="submit"
             disabled={isSaving}
-            className="min-h-[44px] px-5 rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8] text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+            className="min-h-[44px] px-5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-sm font-semibold text-[var(--accent-contrast)] disabled:opacity-50 transition-colors"
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>

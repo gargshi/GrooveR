@@ -1,4 +1,4 @@
-import { FontOption, UiScaleOption } from '../types/music';
+import { ButtonColorScheme, FontOption, UiScaleOption } from '../types/music';
 
 export interface FontPreset {
   id: FontOption;
@@ -79,4 +79,105 @@ export function applyAppFont(fontOption: FontOption): void {
 export function applyUiScale(scale: UiScaleOption): void {
   const safeScale = UI_SCALE_PRESETS.some((p) => p.value === scale) ? scale : 1;
   document.documentElement.style.fontSize = `${Math.round(safeScale * 1000) / 10}%`;
+}
+
+export interface ButtonColorPreset {
+  id: ButtonColorScheme;
+  label: string;
+  primary: string;
+  hover: string;
+  soft: string;
+  contrast: string;
+  tint: string;
+  border: string;
+  glow: string;
+  dim: string;
+}
+
+export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
+  {
+    id: 'blue',
+    label: 'Studio Blue',
+    primary: '#2E8BFF',
+    hover: '#1E7AE8',
+    soft: '#64AEFF',
+    contrast: '#FFFFFF',
+    tint: 'rgba(46, 139, 255, 0.16)',
+    border: 'rgba(46, 139, 255, 0.44)',
+    glow: 'rgba(46, 139, 255, 0.28)',
+    dim: 'rgba(46, 139, 255, 0.55)',
+  },
+  {
+    id: 'cyan',
+    label: 'Metro Cyan',
+    primary: '#1BA1E2',
+    hover: '#1489C4',
+    soft: '#5CC4F5',
+    contrast: '#FFFFFF',
+    tint: 'rgba(27, 161, 226, 0.16)',
+    border: 'rgba(27, 161, 226, 0.48)',
+    glow: 'rgba(27, 161, 226, 0.28)',
+    dim: 'rgba(27, 161, 226, 0.55)',
+  },
+  {
+    id: 'emerald',
+    label: 'Emerald',
+    primary: '#059669',
+    hover: '#047857',
+    soft: '#34D399',
+    contrast: '#FFFFFF',
+    tint: 'rgba(5, 150, 105, 0.16)',
+    border: 'rgba(5, 150, 105, 0.45)',
+    glow: 'rgba(5, 150, 105, 0.28)',
+    dim: 'rgba(5, 150, 105, 0.55)',
+  },
+  {
+    id: 'crimson',
+    label: 'Crimson',
+    primary: '#E11D48',
+    hover: '#BE123C',
+    soft: '#FB7185',
+    contrast: '#FFFFFF',
+    tint: 'rgba(225, 29, 72, 0.16)',
+    border: 'rgba(225, 29, 72, 0.45)',
+    glow: 'rgba(225, 29, 72, 0.28)',
+    dim: 'rgba(225, 29, 72, 0.55)',
+  },
+  {
+    id: 'amber',
+    label: 'Amber Gold',
+    primary: '#F59E0B',
+    hover: '#D97706',
+    soft: '#FBBF24',
+    contrast: '#090A0D',
+    tint: 'rgba(245, 158, 11, 0.16)',
+    border: 'rgba(245, 158, 11, 0.45)',
+    glow: 'rgba(245, 158, 11, 0.28)',
+    dim: 'rgba(245, 158, 11, 0.55)',
+  },
+  {
+    id: 'orange',
+    label: 'Tangerine',
+    primary: '#EA580C',
+    hover: '#C2410C',
+    soft: '#FB923C',
+    contrast: '#FFFFFF',
+    tint: 'rgba(234, 88, 12, 0.16)',
+    border: 'rgba(234, 88, 12, 0.45)',
+    glow: 'rgba(234, 88, 12, 0.28)',
+    dim: 'rgba(234, 88, 12, 0.55)',
+  },
+];
+
+export function applyButtonColorScheme(scheme: ButtonColorScheme): void {
+  const preset = BUTTON_COLOR_PRESETS.find((p) => p.id === scheme) ?? BUTTON_COLOR_PRESETS[0];
+  const rootStyle = document.documentElement.style;
+  rootStyle.setProperty('--accent-primary', preset.primary);
+  rootStyle.setProperty('--accent-hover', preset.hover);
+  rootStyle.setProperty('--accent-soft', preset.soft);
+  rootStyle.setProperty('--accent-contrast', preset.contrast);
+  rootStyle.setProperty('--accent-tint', preset.tint);
+  rootStyle.setProperty('--accent-border', preset.border);
+  rootStyle.setProperty('--accent-glow', preset.glow);
+  rootStyle.setProperty('--accent-dim', preset.dim);
 }

@@ -142,7 +142,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
             type="button"
             onClick={onToggleSearch}
             className={`min-h-[42px] min-w-[42px] flex items-center justify-center transition-colors ${
-              searchOpen || searchQuery ? 'text-[#1BA1E2]' : 'text-zinc-300 hover:text-white'
+              searchOpen || searchQuery ? 'text-[var(--accent-primary)]' : 'text-zinc-300 hover:text-white'
             }`}
             aria-label={searchOpen ? 'Close search' : 'Search library'}
           >
@@ -154,7 +154,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
             className="min-h-[42px] min-w-[42px] flex items-center justify-center text-zinc-300 hover:text-white transition-colors lg:hidden"
             aria-label="Open equalizer"
           >
-            <SlidersHorizontal className="w-4 h-4 text-[#1BA1E2]" />
+            <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
           </button>
           <button
             type="button"
@@ -167,7 +167,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
           <button
             type="button"
             onClick={onImportFiles}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-white hover:text-[#1BA1E2] transition-colors"
+            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-white hover:text-[var(--accent-primary)] transition-colors"
             aria-label="Add music files"
           >
             <Plus className="w-5 h-5" />
@@ -238,7 +238,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search albums, songs, artists..."
               autoFocus={searchOpen}
-              className="w-full min-h-[42px] pl-10 pr-4 bg-black border-2 border-white/25 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#1BA1E2]"
+              className="w-full min-h-[42px] pl-10 pr-4 bg-black border-2 border-white/25 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </div>
         </div>

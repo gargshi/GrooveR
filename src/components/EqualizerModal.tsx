@@ -81,7 +81,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
               onClick={() => onChange({ ...eq, enabled: !eq.enabled })}
               className={`min-h-[38px] px-3 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap ${
                 eq.enabled
-                  ? 'bg-[#2E8BFF] text-white'
+                  ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]'
                   : 'bg-white/[0.06] text-zinc-400 hover:text-white'
               }`}
             >
@@ -109,7 +109,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
                 onClick={() => applyPreset(presetName)}
                 className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                   active
-                    ? 'bg-[#2E8BFF]/20 text-[#64AEFF] border border-[#2E8BFF]/40'
+                    ? 'bg-[var(--accent-tint)] text-[var(--accent-soft)] border border-[var(--accent-border)]'
                     : 'bg-white/[0.04] text-zinc-300 border border-white/[0.06] hover:bg-white/[0.08]'
                 }`}
               >
@@ -128,7 +128,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
                 key={band.key}
                 className="flex flex-col items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
               >
-                <span className="text-[11px] font-mono-nums text-[#64AEFF]">
+                <span className="text-[11px] font-mono-nums text-[var(--accent-soft)]">
                   {val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)}
                 </span>
                 <div className="h-36 flex items-center justify-center py-2">
@@ -141,9 +141,9 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
                     disabled={!eq.enabled}
                     onChange={(e) => handleBandChange(band.key, parseFloat(e.target.value))}
                     aria-label={`${band.label} gain`}
-                    className="groover-range w-28 -rotate-90 accent-[#2E8BFF]"
+                    className="groover-range w-28 -rotate-90 accent-[var(--accent-primary)]"
                     style={{
-                      background: 'linear-gradient(to right, rgba(255,255,255,0.14), rgba(46,139,255,0.6))',
+                      background: 'linear-gradient(to right, rgba(255,255,255,0.14), var(--accent-dim))',
                       height: '4px',
                       borderRadius: '9999px',
                     }}

@@ -7,6 +7,14 @@
     --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    --accent-primary: #2E8BFF;
+    --accent-hover: #1E7AE8;
+    --accent-soft: #64AEFF;
+    --accent-contrast: #FFFFFF;
+    --accent-tint: rgba(46, 139, 255, 0.16);
+    --accent-border: rgba(46, 139, 255, 0.44);
+    --accent-glow: rgba(46, 139, 255, 0.28);
+    --accent-dim: rgba(46, 139, 255, 0.55);
   }
 
   html,
@@ -40,7 +48,12 @@
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* Custom sleek dark scrollbars */
+/* Custom sleek dark scrollbars with inactivity auto-hide */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -51,12 +64,21 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+html.scrollbars-hidden * {
+  scrollbar-color: transparent transparent;
+}
+
+html.scrollbars-hidden ::-webkit-scrollbar-thumb,
+html.scrollbars-hidden ::-webkit-scrollbar-thumb:hover {
+  background: transparent;
 }
 
 /* Range slider styling for seekbar and EQ */
@@ -74,7 +96,7 @@ input[type="range"].groover-range::-webkit-slider-thumb {
   height: 14px;
   border-radius: 9999px;
   background: #F3F4F6;
-  border: 2px solid #2E8BFF;
+  border: 2px solid var(--accent-primary);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -89,7 +111,7 @@ input[type="range"].groover-range::-moz-range-thumb {
   height: 14px;
   border-radius: 9999px;
   background: #F3F4F6;
-  border: 2px solid #2E8BFF;
+  border: 2px solid var(--accent-primary);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 

@@ -226,7 +226,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                   }}
                   className={`absolute inset-0 rounded-3xl overflow-hidden bg-[#13161F] border ${
                     isFront && isFrontActive
-                      ? 'border-[#2E8BFF]/45 shadow-[0_24px_54px_rgba(0,0,0,0.65)]'
+                      ? 'border-[var(--accent-border)] shadow-[0_24px_54px_rgba(0,0,0,0.65)]'
                       : 'border-white/10 shadow-[0_20px_44px_rgba(0,0,0,0.55)]'
                   } flex flex-col ${isFront ? 'cursor-grab active:cursor-grabbing' : 'pointer-events-none'}`}
                 >
@@ -257,7 +257,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                     <div className="min-w-0 space-y-1">
                       <h2
                         className={`font-display text-lg sm:text-xl font-bold truncate ${
-                          isFront && isFrontActive ? 'text-[#64AEFF]' : 'text-white'
+                          isFront && isFrontActive ? 'text-[var(--accent-soft)]' : 'text-white'
                         }`}
                       >
                         {trk.title}
@@ -279,7 +279,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                           onClick={() => onToggleFavorite(trk.id)}
                           className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-colors ${
                             trk.isFavorite
-                              ? 'bg-[#2E8BFF]/15 border-[#2E8BFF]/35 text-[#2E8BFF]'
+                              ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-[var(--accent-primary)]'
                               : 'bg-white/[0.04] border-white/[0.08] text-zinc-300 hover:text-white'
                           }`}
                           aria-label={trk.isFavorite ? 'Remove favorite' : 'Add favorite'}
@@ -290,7 +290,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                         <button
                           type="button"
                           onClick={() => (isFrontActive ? onTogglePlay() : onPlayTrack(safeIndex))}
-                          className="flex-1 min-h-[46px] px-5 rounded-xl bg-[#2E8BFF] hover:bg-[#1E7AE8] text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                          className="flex-1 min-h-[46px] px-5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
                         >
                           {isFrontActive && isPlaying ? (
                             <>
@@ -422,7 +422,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
             className="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-[#111318] border border-white/[0.08] hover:border-white/20 disabled:opacity-40 text-zinc-300 hover:text-white inline-flex items-center justify-center gap-1.5 text-xs font-medium transition-colors whitespace-nowrap"
             aria-label="Deal random card"
           >
-            <Shuffle className="w-3.5 h-3.5 text-[#2E8BFF]" />
+            <Shuffle className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
             <span>Draw</span>
           </button>
 
@@ -456,7 +456,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
             <button
               type="button"
               onClick={() => goToIndex(activePlayingIndex)}
-              className="min-h-[36px] px-3 rounded-xl bg-[#2E8BFF]/15 border border-[#2E8BFF]/35 text-xs font-medium text-[#64AEFF] hover:bg-[#2E8BFF]/25 transition-colors whitespace-nowrap"
+              className="min-h-[36px] px-3 rounded-xl bg-[var(--accent-tint)] border border-[var(--accent-border)] text-xs font-medium text-[var(--accent-soft)] hover:brightness-110 transition-colors whitespace-nowrap"
             >
               Jump to Playing
             </button>
@@ -483,7 +483,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                 }}
                 className={`shrink-0 w-44 lg:w-full min-h-[56px] p-2.5 rounded-xl border text-left flex items-center gap-3 transition-colors ${
                   isSelected
-                    ? 'bg-[#2E8BFF]/14 border-[#2E8BFF]/40 text-white'
+                    ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
                     : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
                 }`}
               >
@@ -497,7 +497,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                 <div className="min-w-0 flex-1">
                   <p
                     className={`text-xs font-semibold truncate ${
-                      isCurrent ? 'text-[#64AEFF]' : 'text-white'
+                      isCurrent ? 'text-[var(--accent-soft)]' : 'text-white'
                     }`}
                   >
                     {trk.title}
