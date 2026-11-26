@@ -265,7 +265,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <div className="relative h-9 flex items-center">
-            <div className="absolute inset-x-0 h-2 rounded-full bg-white/20 overflow-hidden pointer-events-none">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-[#2E3545] border border-white/20 overflow-hidden pointer-events-none">
               <div
                 className="h-full bg-[#2E8BFF] rounded-full"
                 style={{
@@ -274,7 +274,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             </div>
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3.5 bg-white/50 rounded-full pointer-events-none"
+              className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-white/75 rounded-full pointer-events-none"
               style={{ left: '33.3333%' }}
               aria-hidden="true"
             />
@@ -290,10 +290,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-mono-nums text-zinc-400">
-            <span>{minBps.toLocaleString()} bps (0.50×)</span>
-            <span>{baseBps.toLocaleString()} bps (1.00×)</span>
-            <span>{maxBps.toLocaleString()} bps (2.00×)</span>
+          <div className="flex items-center justify-between gap-2 text-[11px] font-mono-nums text-zinc-400">
+            <span className="whitespace-nowrap">0.50× · {Math.round(minBps / 1000)}k</span>
+            <span className="whitespace-nowrap">1.00× · {Math.round(baseBps / 1000)}k</span>
+            <span className="whitespace-nowrap">2.00× · {Math.round(maxBps / 1000)}k</span>
           </div>
         </div>
 
