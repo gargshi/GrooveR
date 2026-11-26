@@ -136,6 +136,7 @@ export default function App() {
         applyAppFont(loadedSettings.fontFamily);
         applyUiScale(loadedSettings.uiScale);
         engine.setVolume(loadedSettings.volume, loadedSettings.isMuted);
+        engine.setPlaybackRate(loadedSettings.playbackRate);
         engine.applyEq(loadedSettings.eq);
         await refreshStorageStats(sortedTracks);
 
@@ -163,7 +164,7 @@ export default function App() {
     };
   }, [engine, refreshStorageStats]);
 
-  // Apply active font and UI scale whenever changed
+  // Apply active font, UI scale, and playback speed whenever changed
   useEffect(() => {
     applyAppFont(settings.fontFamily);
   }, [settings.fontFamily]);
@@ -171,6 +172,10 @@ export default function App() {
   useEffect(() => {
     applyUiScale(settings.uiScale);
   }, [settings.uiScale]);
+
+  useEffect(() => {
+    engine.setPlaybackRate(settings.playbackRate);
+  }, [engine, settings.playbackRate]);
 
   // Persist settings helper
   const updateSettings = useCallback(
@@ -222,6 +227,7 @@ export default function App() {
         await engine.loadBlob(blob, true);
         engine.applyEq(settings.eq);
         engine.setVolume(settings.volume, settings.isMuted);
+        engine.setPlaybackRate(settings.playbackRate);
         setIsPlaying(true);
 
         const updated: Track = {
@@ -236,7 +242,7 @@ export default function App() {
         setIsPlaying(false);
       }
     },
-    [queueIds, trackMap, engine, settings.eq, settings.volume, settings.isMuted, showToast, updateSettings]
+    [queueIds, trackMap, engine, settings.eq, settings.volume, settings.isMuted, settings.playbackRate, showToast, updateSettings]
   );
 
   const handleNext = useCallback(() => {
@@ -364,6 +370,7 @@ export default function App() {
     isPlaying,
     duration,
     settings.lockscreenWidget,
+    settings.playbackRate,
     handleTogglePlay,
     handlePrev,
     handleNext,
@@ -848,6 +855,13 @@ export default function App() {
               onSelectSongsDisplayMode={(mode: SongsDisplayMode) =>
                 updateSettings((prev) => ({ ...prev, songsDisplayMode: mode }))
               }
+              playbackRate={settings.playbackRate}
+              activeTrackBitrateKbps={currentTrack?.bitrateKbps}
+              onChangePlaybackRate={(rate: number) => {
+                const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));
+                engine.setPlaybackRate(clamped);
+                updateSettings((prev) => ({ ...prev, playbackRate: clamped }));
+              }}
               onTogglePlay={() => void handleTogglePlay()}
             />
           )}
@@ -996,6 +1010,8 @@ export default function App() {
         uiScale={settings.uiScale}
         lockscreenWidget={settings.lockscreenWidget}
         songsDisplayMode={settings.songsDisplayMode}
+        playbackRate={settings.playbackRate}
+        activeTrackBitrateKbps={currentTrack?.bitrateKbps}
         onSelectFont={(font: FontOption) =>
           updateSettings((prev) => ({ ...prev, fontFamily: font }))
         }
@@ -1008,6 +1024,11 @@ export default function App() {
         onSelectSongsDisplayMode={(mode: SongsDisplayMode) =>
           updateSettings((prev) => ({ ...prev, songsDisplayMode: mode }))
         }
+        onChangePlaybackRate={(rate: number) => {
+          const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));
+          engine.setPlaybackRate(clamped);
+          updateSettings((prev) => ({ ...prev, playbackRate: clamped }));
+        }}
         onOpenEq={() => setIsEqOpen(true)}
         onClose={() => setIsSettingsOpen(false)}
       />

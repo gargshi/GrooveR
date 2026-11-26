@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   isMuted: false,
   shuffle: false,
   repeat: 'off',
+  playbackRate: 1,
   fontFamily: 'system',
   uiScale: 1,
   lockscreenWidget: true,
@@ -238,6 +239,10 @@ export async function loadSettings(): Promise<PersistedSettings> {
   return {
     ...DEFAULT_SETTINGS,
     ...stored,
+    playbackRate:
+      typeof stored.playbackRate === 'number' && Number.isFinite(stored.playbackRate)
+        ? Math.min(2, Math.max(0.5, stored.playbackRate))
+        : 1,
     eq: {
       ...DEFAULT_EQ,
       ...(stored.eq ?? {}),

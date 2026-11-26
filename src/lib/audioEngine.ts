@@ -18,11 +18,13 @@ export class GrooveAudioEngine {
   private filters: BiquadFilterNode[] = [];
   private currentUrl: string | null = null;
   private freqData: Uint8Array<ArrayBuffer> | null = null;
+  private playbackRate = 1;
 
   constructor() {
     this.audio = new Audio();
     this.audio.preload = 'auto';
     this.audio.crossOrigin = 'anonymous';
+    this.setPlaybackRate(1);
   }
 
   get element(): HTMLAudioElement {
@@ -78,6 +80,7 @@ export class GrooveAudioEngine {
     this.currentUrl = URL.createObjectURL(blob);
     this.audio.src = this.currentUrl;
     this.audio.load();
+    this.setPlaybackRate(this.playbackRate);
 
     if (autoPlay) {
       await this.play();
@@ -89,6 +92,7 @@ export class GrooveAudioEngine {
     if (this.ctx && this.ctx.state === 'suspended') {
       await this.ctx.resume();
     }
+    this.setPlaybackRate(this.playbackRate);
     await this.audio.play();
   }
 
@@ -100,6 +104,19 @@ export class GrooveAudioEngine {
     if (Number.isFinite(time) && time >= 0) {
       this.audio.currentTime = Math.min(time, this.audio.duration || time);
     }
+  }
+
+  setPlaybackRate(rate: number): void {
+    const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));
+    this.playbackRate = clamped;
+    this.audio.defaultPlaybackRate = clamped;
+    this.audio.playbackRate = clamped;
+    const pitchAudio = this.audio as HTMLAudioElement & {
+      preservesPitch?: boolean;
+      webkitPreservesPitch?: boolean;
+    };
+    pitchAudio.preservesPitch = true;
+    pitchAudio.webkitPreservesPitch = true;
   }
 
   setVolume(volume: number, muted: boolean): void {
@@ -145,6 +162,7 @@ export class GrooveAudioEngine {
       album: string;
       artwork: string;
       isPlaying: boolean;
+      playbackSpeed: number;
       durationMs: number;
       positionMs: number;
     }) => Promise<void>;
@@ -161,6 +179,7 @@ export class GrooveAudioEngine {
                 album: string;
                 artwork: string;
                 isPlaying: boolean;
+                playbackSpeed: number;
                 durationMs: number;
                 positionMs: number;
               }) => Promise<void>;
@@ -244,6 +263,7 @@ export class GrooveAudioEngine {
           album: track.album,
           artwork: track.coverArt ?? '',
           isPlaying,
+          playbackSpeed: this.playbackRate,
           durationMs: Math.round(safeDuration * 1000),
           positionMs: Math.round(safePos * 1000),
         })
@@ -263,7 +283,7 @@ export class GrooveAudioEngine {
         try {
           navigator.mediaSession.setPositionState({
             duration: durationSec,
-            playbackRate: isPlaying ? 1 : 0,
+            playbackRate: isPlaying ? this.playbackRate : 0,
             position: Math.max(0, Math.min(positionSec, durationSec)),
           });
         } catch {

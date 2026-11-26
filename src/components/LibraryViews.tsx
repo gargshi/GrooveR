@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Download,
   FolderPlus,
+  Gauge,
   HardDrive,
   Heart,
   Layers,
@@ -12,6 +13,7 @@ import {
   Mic2,
   Play,
   Plus,
+  RotateCcw,
   Search,
   Settings,
   Shuffle,
@@ -81,6 +83,9 @@ interface LibraryViewsProps {
   onToggleLockscreenWidget: (enabled: boolean) => void;
   songsDisplayMode: SongsDisplayMode;
   onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
+  playbackRate: number;
+  activeTrackBitrateKbps?: number;
+  onChangePlaybackRate: (rate: number) => void;
   onTogglePlay: () => void;
 }
 
@@ -122,6 +127,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onToggleLockscreenWidget,
   songsDisplayMode,
   onSelectSongsDisplayMode,
+  playbackRate,
+  activeTrackBitrateKbps,
+  onChangePlaybackRate,
   onTogglePlay,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -1279,6 +1287,63 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Global Song Speed (bits/sec) Setting Slider */}
+          {(() => {
+            const baseBps = Math.max(32_000, (activeTrackBitrateKbps || 320) * 1000);
+            const minBps = Math.round(baseBps * 0.5);
+            const maxBps = Math.round(baseBps * 2.0);
+            const stepBps = Math.max(1000, Math.round(baseBps * 0.01));
+            const currentBps = Math.round(baseBps * playbackRate);
+
+            return (
+              <div className="p-5 rounded-2xl bg-[#111318] border border-white/[0.07] space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <Gauge className="w-4 h-4 text-[#2E8BFF]" />
+                    <div>
+                      <h2 className="text-sm font-semibold text-white">Global Song Speed (bits/sec)</h2>
+                      <p className="text-xs text-zinc-400">
+                        Adjust playback speed across all songs ({activeTrackBitrateKbps ? 'calibrated to active track' : '320,000 bps reference'})
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono-nums text-[#64AEFF]">
+                      {currentBps.toLocaleString()} bps · {playbackRate.toFixed(2)}×
+                    </span>
+                    {Math.abs(playbackRate - 1) > 0.005 && (
+                      <button
+                        type="button"
+                        onClick={() => onChangePlaybackRate(1)}
+                        className="min-h-[32px] px-2.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-zinc-200 inline-flex items-center gap-1 transition-colors"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Reset</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <input
+                  type="range"
+                  min={minBps}
+                  max={maxBps}
+                  step={stepBps}
+                  value={currentBps}
+                  onChange={(e) => onChangePlaybackRate(Number(e.target.value) / baseBps)}
+                  aria-label="Global song speed in bits per second"
+                  className="groover-range w-full h-1.5 rounded-full bg-white/15 accent-[#2E8BFF]"
+                />
+
+                <div className="flex items-center justify-between text-[11px] font-mono-nums text-zinc-500">
+                  <span>{minBps.toLocaleString()} bps (0.50×)</span>
+                  <span>{baseBps.toLocaleString()} bps (1.00×)</span>
+                  <span>{maxBps.toLocaleString()} bps (2.00×)</span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Audio Formats Breakdown */}
           {formatBreakdown.length > 0 && (

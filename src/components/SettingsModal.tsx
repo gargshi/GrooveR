@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Check,
+  Gauge,
   Layers,
   List,
   Maximize2,
+  RotateCcw,
   SlidersHorizontal,
   Smartphone,
   Type,
@@ -18,10 +20,13 @@ interface SettingsModalProps {
   uiScale: UiScaleOption;
   lockscreenWidget: boolean;
   songsDisplayMode: SongsDisplayMode;
+  playbackRate: number;
+  activeTrackBitrateKbps?: number;
   onSelectFont: (font: FontOption) => void;
   onSelectUiScale: (scale: UiScaleOption) => void;
   onToggleLockscreenWidget: (enabled: boolean) => void;
   onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
+  onChangePlaybackRate: (rate: number) => void;
   onOpenEq: () => void;
   onClose: () => void;
 }
@@ -32,10 +37,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   uiScale,
   lockscreenWidget,
   songsDisplayMode,
+  playbackRate,
+  activeTrackBitrateKbps,
   onSelectFont,
   onSelectUiScale,
   onToggleLockscreenWidget,
   onSelectSongsDisplayMode,
+  onChangePlaybackRate,
   onOpenEq,
   onClose,
 }) => {
@@ -121,6 +129,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setDragY(0);
     }
   };
+
+  const baseBps = Math.max(32_000, (activeTrackBitrateKbps || 320) * 1000);
+  const minBps = Math.round(baseBps * 0.5);
+  const maxBps = Math.round(baseBps * 2.0);
+  const stepBps = Math.max(1000, Math.round(baseBps * 0.01));
+  const currentBps = Math.round(baseBps * playbackRate);
 
   const backdropOpacity = isClosing
     ? 0
@@ -222,6 +236,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <p className="text-[11px] text-zinc-400 truncate">Swipeable stack</p>
               </div>
             </button>
+          </div>
+        </div>
+
+        {/* Global Song Speed (bits/sec) Setting Slider */}
+        <div className="p-3.5 rounded-xl bg-[#0D0F14] border border-white/[0.07] space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+              <Gauge className="w-4 h-4 text-[#2E8BFF]" />
+              <span>Global Song Speed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono-nums text-[#64AEFF]">
+                {currentBps.toLocaleString()} bps · {playbackRate.toFixed(2)}×
+              </span>
+              {Math.abs(playbackRate - 1) > 0.005 && (
+                <button
+                  type="button"
+                  onClick={() => onChangePlaybackRate(1)}
+                  className="min-h-[28px] px-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[11px] font-medium text-zinc-200 inline-flex items-center gap-1 transition-colors"
+                  aria-label="Reset song speed to 1.00x"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <input
+            type="range"
+            min={minBps}
+            max={maxBps}
+            step={stepBps}
+            value={currentBps}
+            onChange={(e) => onChangePlaybackRate(Number(e.target.value) / baseBps)}
+            aria-label="Global song speed in bits per second"
+            className="groover-range w-full h-1.5 rounded-full bg-white/15 accent-[#2E8BFF]"
+          />
+
+          <div className="flex items-center justify-between text-[11px] font-mono-nums text-zinc-500">
+            <span>{minBps.toLocaleString()} bps (0.50×)</span>
+            <span>{baseBps.toLocaleString()} bps (1.00×)</span>
+            <span>{maxBps.toLocaleString()} bps (2.00×)</span>
           </div>
         </div>
 

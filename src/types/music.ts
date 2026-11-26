@@ -87,6 +87,7 @@ export interface PersistedSettings {
   isMuted: boolean;
   shuffle: boolean;
   repeat: RepeatMode;
+  playbackRate: number;
   fontFamily: FontOption;
   uiScale: UiScaleOption;
   lockscreenWidget: boolean;

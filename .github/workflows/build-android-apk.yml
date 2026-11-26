@@ -66,6 +66,18 @@ jobs:
             let text = fs.readFileSync(file, "utf8");
             text = text.replace(/mavenCentral\(\)/g, "maven { url \"https://maven-central.storage-download.googleapis.com/maven2/\" }\n        mavenCentral()");
             fs.writeFileSync(file, text);
+
+            const appGradle = "android/app/build.gradle";
+            let appText = fs.readFileSync(appGradle, "utf8");
+            const runNum = Number(process.env.GITHUB_RUN_NUMBER || "1");
+            const nextVersionCode = 10 + (Number.isFinite(runNum) ? runNum : 1);
+            const refName = process.env.GITHUB_REF_NAME || "";
+            const tagVer = refName.startsWith("v") ? refName.slice(1) : "";
+            const nextVersionName = tagVer || `1.0.${Number.isFinite(runNum) ? runNum : 1}`;
+            appText = appText
+              .replace(/versionCode\s+\d+/, `versionCode ${nextVersionCode}`)
+              .replace(/versionName\s+"[^"]+"/, `versionName "${nextVersionName}"`);
+            fs.writeFileSync(appGradle, appText);
           '
 
       - name: Configure Android icon, dark theme, and status bar clearance
@@ -199,6 +211,7 @@ jobs:
                 "    private String lastArtworkDataUrl = \"\";",
                 "    private Bitmap currentArtwork = null;",
                 "    private boolean currentPlaying = false;",
+                "    private float currentPlaybackSpeed = 1.0f;",
                 "    private long currentDurationMs = 0;",
                 "    private long currentPositionMs = 0;",
                 "",
@@ -238,6 +251,7 @@ jobs:
                 "                currentArtist = intent.getStringExtra(\"artist\") != null ? intent.getStringExtra(\"artist\") : \"\";",
                 "                currentAlbum = intent.getStringExtra(\"album\") != null ? intent.getStringExtra(\"album\") : \"\";",
                 "                currentPlaying = intent.getBooleanExtra(\"isPlaying\", false);",
+                "                currentPlaybackSpeed = intent.getFloatExtra(\"playbackSpeed\", 1.0f);",
                 "                currentDurationMs = intent.getLongExtra(\"durationMs\", 0);",
                 "                currentPositionMs = intent.getLongExtra(\"positionMs\", 0);",
                 "                String art = pendingArtworkDataUrl != null ? pendingArtworkDataUrl : \"\";",
@@ -279,7 +293,7 @@ jobs:
                 "        long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO;",
                 "        mediaSession.setPlaybackState(new PlaybackState.Builder()",
                 "            .setActions(actions)",
-                "            .setState(state, currentPositionMs, currentPlaying ? 1.0f : 0f)",
+                "            .setState(state, currentPositionMs, currentPlaying ? currentPlaybackSpeed : 0f)",
                 "            .build());",
                 "",
                 "        Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());",
@@ -376,6 +390,7 @@ jobs:
                 "        intent.putExtra(\"album\", call.getString(\"album\", \"\"));",
                 "        boolean playing = Boolean.TRUE.equals(call.getBoolean(\"isPlaying\", false));",
                 "        intent.putExtra(\"isPlaying\", playing);",
+                "        intent.putExtra(\"playbackSpeed\", call.getFloat(\"playbackSpeed\", 1.0f));",
                 "        intent.putExtra(\"durationMs\", call.getLong(\"durationMs\", 0L));",
                 "        intent.putExtra(\"positionMs\", call.getLong(\"positionMs\", 0L));",
                 "        try {",
@@ -448,6 +463,13 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon || ./gradlew assembleRelease --no-daemon --refresh-dependencies
 
+      - name: Restore persistent release keystore cache
+        if: secrets.ANDROID_KEYSTORE_BASE64 == ''
+        uses: actions/cache@v4
+        with:
+          path: .groover-keystore
+          key: groover-release-keystore-v1-${{ github.repository_owner }}
+
       - name: Align and sign release APK
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -473,20 +495,25 @@ jobs:
             KEY_ALIAS="$ANDROID_KEY_ALIAS"
             KEY_PASS="$ANDROID_KEY_PASSWORD"
           else
-            echo "::notice::ANDROID_KEYSTORE_BASE64 secret not set. Generating an ephemeral release keystore so the APK can still be installed on your OnePlus 15R."
-            keytool -genkeypair -v \
-              -keystore ephemeral-release.jks \
-              -alias groover \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass groover123 \
-              -keypass groover123 \
-              -dname "CN=GrooveR, OU=Mobile, O=GrooveR, L=Unknown, S=Unknown, C=US"
-            KEYSTORE_PATH="ephemeral-release.jks"
+            mkdir -p .groover-keystore
+            KEYSTORE_PATH=".groover-keystore/groover-release.jks"
             KS_PASS="groover123"
             KEY_ALIAS="groover"
             KEY_PASS="groover123"
+            if [ ! -f "$KEYSTORE_PATH" ]; then
+              echo "::notice::Creating persistent GrooveR signing keystore in Actions cache so future APK updates install in-place without uninstalling. For permanent cross-year signing, add ANDROID_KEYSTORE_BASE64 in repository secrets."
+              keytool -genkeypair -v \
+                -keystore "$KEYSTORE_PATH" \
+                -alias "$KEY_ALIAS" \
+                -keyalg RSA \
+                -keysize 2048 \
+                -validity 10000 \
+                -storepass "$KS_PASS" \
+                -keypass "$KEY_PASS" \
+                -dname "CN=GrooveR, OU=Mobile, O=GrooveR, L=Unknown, S=Unknown, C=US"
+            else
+              echo "Reusing cached GrooveR signing keystore for seamless in-place APK update."
+            fi
           fi
 
           "$APKSIGNER" sign \
@@ -498,7 +525,7 @@ jobs:
             GrooveR-aligned.apk
 
           "$APKSIGNER" verify GrooveR-release.apk
-          rm -f release.jks ephemeral-release.jks GrooveR-aligned.apk
+          rm -f release.jks GrooveR-aligned.apk
 
       - name: Upload Release APK artifact
         uses: actions/upload-artifact@v4
