@@ -1325,18 +1325,33 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   </div>
                 </div>
 
-                <input
-                  type="range"
-                  min={minBps}
-                  max={maxBps}
-                  step={stepBps}
-                  value={currentBps}
-                  onChange={(e) => onChangePlaybackRate(Number(e.target.value) / baseBps)}
-                  aria-label="Global song speed in bits per second"
-                  className="groover-range w-full h-1.5 rounded-full bg-white/15 accent-[#2E8BFF]"
-                />
+                <div className="relative h-9 flex items-center">
+                  <div className="absolute inset-x-0 h-2 rounded-full bg-white/20 overflow-hidden pointer-events-none">
+                    <div
+                      className="h-full bg-[#2E8BFF] rounded-full"
+                      style={{
+                        width: `${Math.min(100, Math.max(0, ((playbackRate - 0.5) / 1.5) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3.5 bg-white/50 rounded-full pointer-events-none"
+                    style={{ left: '33.3333%' }}
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="range"
+                    min={minBps}
+                    max={maxBps}
+                    step={stepBps}
+                    value={currentBps}
+                    onChange={(e) => onChangePlaybackRate(Number(e.target.value) / baseBps)}
+                    aria-label="Global song speed in bits per second"
+                    className="groover-range relative z-10 w-full h-9"
+                  />
+                </div>
 
-                <div className="flex items-center justify-between text-[11px] font-mono-nums text-zinc-500">
+                <div className="flex items-center justify-between text-[11px] font-mono-nums text-zinc-400">
                   <span>{minBps.toLocaleString()} bps (0.50×)</span>
                   <span>{baseBps.toLocaleString()} bps (1.00×)</span>
                   <span>{maxBps.toLocaleString()} bps (2.00×)</span>
