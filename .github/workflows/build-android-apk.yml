@@ -464,7 +464,6 @@ jobs:
           ./gradlew assembleRelease --no-daemon || ./gradlew assembleRelease --no-daemon --refresh-dependencies
 
       - name: Restore persistent release keystore cache
-        if: secrets.ANDROID_KEYSTORE_BASE64 == ''
         uses: actions/cache@v4
         with:
           path: .groover-keystore
