@@ -119,7 +119,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#090A0D] flex flex-col overflow-hidden"
+      className="fixed inset-0 z-50 bg-[#F4F6FA] dark:bg-[#090A0D] flex flex-col overflow-hidden"
       style={{
         backgroundImage: `radial-gradient(circle at 50% 18%, ${accent}26, transparent 62%)`,
       }}
@@ -129,18 +129,18 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-colors"
           aria-label="Collapse Now Playing"
         >
           <ChevronDown className="w-6 h-6" />
         </button>
 
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/[0.07]">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-black/[0.05] dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.07]">
           <button
             type="button"
             onClick={() => setPanelTab('art')}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-              panelTab === 'art' ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]' : 'text-zinc-400 hover:text-white'
+              panelTab === 'art' ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             Now Playing
@@ -149,7 +149,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             type="button"
             onClick={() => setPanelTab('queue')}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-              panelTab === 'queue' ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]' : 'text-zinc-400 hover:text-white'
+              panelTab === 'queue' ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             Up Next ({queueTracks.length})
@@ -159,7 +159,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
         <button
           type="button"
           onClick={() => onEditTrack(currentTrack)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-colors"
           aria-label="Edit track metadata"
           title="Edit track info"
         >
@@ -171,7 +171,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
       <div className="flex-1 overflow-y-auto px-5 sm:px-10 pb-8 flex flex-col justify-between max-w-2xl w-full mx-auto">
         {panelTab === 'art' ? (
           <div className="flex-1 flex flex-col items-center justify-center py-4 gap-6">
-            <div className="w-full max-w-[320px] sm:max-w-[360px] aspect-square rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+            <div className="w-full max-w-[320px] sm:max-w-[360px] aspect-square rounded-3xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-white/10">
               <CoverArt
                 src={currentTrack.coverArt}
                 alt={currentTrack.album}
@@ -202,7 +202,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
                   className={`w-full min-h-[56px] px-3 py-2 rounded-xl flex items-center gap-3 text-left transition-colors ${
                     isCurrent
                       ? 'bg-[var(--accent-tint)] border border-[var(--accent-border)]'
-                      : 'hover:bg-white/[0.05]'
+                      : 'hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'
                   }`}
                 >
                   <span className="w-6 text-xs font-mono-nums text-zinc-500 text-center shrink-0">
@@ -216,10 +216,10 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
                     iconSize="w-4 h-4"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[var(--accent-soft)]' : 'text-white'}`}>
+                    <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[var(--accent-soft)]' : 'text-zinc-900 dark:text-white'}`}>
                       {trk.title}
                     </p>
-                    <p className="text-xs text-zinc-400 truncate">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                       {trk.artist} <span aria-hidden="true">·</span> {trk.album}
                     </p>
                   </div>
@@ -236,10 +236,10 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
         <div className="space-y-5 pt-2 pb-safe">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-white truncate">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white truncate">
                 {currentTrack.title}
               </h2>
-              <p className="text-sm sm:text-base text-zinc-300 truncate mt-1">
+              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 truncate mt-1">
                 {currentTrack.artist} <span aria-hidden="true">·</span> {currentTrack.album}
               </p>
               <p className="text-xs font-mono-nums text-zinc-500 mt-1">
@@ -254,7 +254,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl transition-colors shrink-0 ${
                 currentTrack.isFavorite
                   ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]'
-                  : 'text-zinc-400 hover:text-white bg-white/[0.04]'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.04]'
               }`}
               aria-label={currentTrack.isFavorite ? 'Remove favorite' : 'Favorite track'}
             >
@@ -265,7 +265,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
           {/* Scrubbable Seekbar */}
           <div className="space-y-1.5">
             <div className="relative h-6 flex items-center">
-              <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-zinc-300 dark:bg-white/15 overflow-hidden">
                 <div
                   className="h-full bg-[var(--accent-primary)]"
                   style={{ width: `${progress}%` }}
@@ -282,7 +282,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
                 className="groover-range absolute inset-0 w-full opacity-0 hover:opacity-100 focus:opacity-100"
               />
             </div>
-            <div className="flex items-center justify-between text-xs font-mono-nums text-zinc-400">
+            <div className="flex items-center justify-between text-xs font-mono-nums text-zinc-500 dark:text-zinc-400">
               <span>{formatDuration(currentTime)}</span>
               <span>{formatDuration(safeDuration)}</span>
             </div>
@@ -294,7 +294,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               type="button"
               onClick={onToggleShuffle}
               className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl transition-colors ${
-                shuffle ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
+                shuffle ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
               aria-label="Shuffle"
             >
@@ -304,7 +304,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             <button
               type="button"
               onClick={onPrev}
-              className="min-h-[52px] min-w-[52px] flex items-center justify-center rounded-2xl text-white hover:bg-white/[0.07] active:scale-95 transition-transform"
+              className="min-h-[52px] min-w-[52px] flex items-center justify-center rounded-2xl text-zinc-900 dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.07] active:scale-95 transition-transform"
               aria-label="Previous track"
             >
               <SkipBack className="w-6 h-6 fill-current" />
@@ -327,7 +327,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             <button
               type="button"
               onClick={onNext}
-              className="min-h-[52px] min-w-[52px] flex items-center justify-center rounded-2xl text-white hover:bg-white/[0.07] active:scale-95 transition-transform"
+              className="min-h-[52px] min-w-[52px] flex items-center justify-center rounded-2xl text-zinc-900 dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.07] active:scale-95 transition-transform"
               aria-label="Next track"
             >
               <SkipForward className="w-6 h-6 fill-current" />
@@ -337,7 +337,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               type="button"
               onClick={onCycleRepeat}
               className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl transition-colors ${
-                repeat !== 'off' ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
+                repeat !== 'off' ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
               aria-label="Repeat"
             >
@@ -346,11 +346,11 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
           </div>
 
           {/* Secondary Utility Row */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/[0.07]">
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-white/[0.07]">
             <button
               type="button"
               onClick={onOpenEq}
-              className="min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/[0.05] transition-colors whitespace-nowrap"
+              className="min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors whitespace-nowrap"
             >
               <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Equalizer</span>
@@ -362,7 +362,7 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
               className={`min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium transition-colors whitespace-nowrap ${
                 sleepRemainingMin !== null
                   ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]'
-                  : 'text-zinc-300 hover:text-white hover:bg-white/[0.05]'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'
               }`}
             >
               <Moon className="w-4 h-4" />
@@ -372,9 +372,9 @@ export const NowPlayingSheet: React.FC<NowPlayingSheetProps> = ({
             <button
               type="button"
               onClick={() => setPanelTab(panelTab === 'queue' ? 'art' : 'queue')}
-              className="min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/[0.05] transition-colors whitespace-nowrap"
+              className="min-h-[44px] px-3 rounded-xl flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors whitespace-nowrap"
             >
-              <ListMusic className="w-4 h-4 text-zinc-400" />
+              <ListMusic className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
               <span>{panelTab === 'queue' ? 'Artwork' : 'Queue'}</span>
             </button>
           </div>

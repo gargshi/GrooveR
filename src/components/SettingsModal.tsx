@@ -6,15 +6,24 @@ import {
   LayoutGrid,
   List,
   Maximize2,
+  Moon,
   Palette,
   RotateCcw,
   SlidersHorizontal,
   Smartphone,
+  Sun,
   Type,
   X,
 } from 'lucide-react';
 import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
-import { ButtonColorScheme, FontOption, SongsDisplayMode, UiScaleOption, UiTheme } from '../types/music';
+import {
+  ButtonColorScheme,
+  ColorMode,
+  FontOption,
+  SongsDisplayMode,
+  UiScaleOption,
+  UiTheme,
+} from '../types/music';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,6 +32,7 @@ interface SettingsModalProps {
   lockscreenWidget: boolean;
   songsDisplayMode: SongsDisplayMode;
   uiTheme: UiTheme;
+  colorMode: ColorMode;
   buttonColorScheme: ButtonColorScheme;
   playbackRate: number;
   activeTrackBitrateKbps?: number;
@@ -31,6 +41,7 @@ interface SettingsModalProps {
   onToggleLockscreenWidget: (enabled: boolean) => void;
   onSelectSongsDisplayMode: (mode: SongsDisplayMode) => void;
   onSelectUiTheme: (theme: UiTheme) => void;
+  onSelectColorMode: (mode: ColorMode) => void;
   onSelectButtonColorScheme: (scheme: ButtonColorScheme) => void;
   onChangePlaybackRate: (rate: number) => void;
   onOpenEq: () => void;
@@ -44,6 +55,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   lockscreenWidget,
   songsDisplayMode,
   uiTheme,
+  colorMode,
   buttonColorScheme,
   playbackRate,
   activeTrackBitrateKbps,
@@ -52,6 +64,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleLockscreenWidget,
   onSelectSongsDisplayMode,
   onSelectUiTheme,
+  onSelectColorMode,
   onSelectButtonColorScheme,
   onChangePlaybackRate,
   onOpenEq,
@@ -176,36 +189,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             ? 'none'
             : 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
         }}
-        className={`w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl border border-white/10 px-5 sm:px-6 pb-5 sm:pb-6 pt-0 shadow-2xl space-y-5 max-h-[88vh] overflow-y-auto pb-safe ${
-          uiTheme === 'pivot' ? 'bg-black' : 'bg-[#12151C]'
+        className={`w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl border border-zinc-200 dark:border-white/10 px-5 sm:px-6 pb-5 sm:pb-6 pt-0 shadow-2xl space-y-5 max-h-[88vh] overflow-y-auto pb-safe ${
+          uiTheme === 'pivot' ? 'bg-white dark:bg-black' : 'bg-white dark:bg-[#12151C]'
         }`}
       >
-        {/* Slide-to-dismiss top white handle bar + header drag zone */}
+        {/* Slide-to-dismiss top handle bar + header drag zone */}
         <div
           onPointerDown={handleHandlePointerDown}
           onPointerMove={handleHandlePointerMove}
           onPointerUp={handleHandlePointerEnd}
           onPointerCancel={handleHandlePointerEnd}
-          className={`sticky top-0 z-10 -mx-5 sm:-mx-6 px-5 sm:px-6 pt-3 pb-2 touch-none select-none cursor-grab active:cursor-grabbing border-b border-white/[0.06] ${
-            uiTheme === 'pivot' ? 'bg-black' : 'bg-[#12151C]'
+          className={`sticky top-0 z-10 -mx-5 sm:-mx-6 px-5 sm:px-6 pt-3 pb-2 touch-none select-none cursor-grab active:cursor-grabbing border-b border-zinc-200 dark:border-white/[0.06] ${
+            uiTheme === 'pivot' ? 'bg-white dark:bg-black' : 'bg-white dark:bg-[#12151C]'
           }`}
         >
           <div
-            className="w-12 h-1.5 bg-white/85 rounded-full mx-auto mb-3 shadow-sm"
+            className="w-12 h-1.5 bg-zinc-400/80 dark:bg-white/85 rounded-full mx-auto mb-3 shadow-sm"
             aria-label="Slide down to close settings"
           />
 
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg font-bold text-white">Settings</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Theme, Layout, Speed, Typography & Lockscreen
+              <h2 className="font-display text-lg font-bold text-zinc-900 dark:text-white">Settings</h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Appearance, Theme, Speed, Typography & Lockscreen
               </p>
             </div>
             <button
               type="button"
               onClick={dismissAnimated}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.06]"
               aria-label="Close settings"
             >
               <X className="w-5 h-5" />
@@ -213,9 +226,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
+        {/* Appearance Mode (Light / Dark) */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            {colorMode === 'light' ? (
+              <Sun className="w-4 h-4 text-[var(--accent-primary)]" />
+            ) : (
+              <Moon className="w-4 h-4 text-[var(--accent-primary)]" />
+            )}
+            <span>Appearance Mode</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onSelectColorMode('dark')}
+              aria-pressed={colorMode === 'dark'}
+              className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
+                colorMode === 'dark'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                  : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
+              }`}
+            >
+              <Moon className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold">Dark Mode</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Low-glare dark canvas</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectColorMode('light')}
+              aria-pressed={colorMode === 'light'}
+              className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
+                colorMode === 'light'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                  : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
+              }`}
+            >
+              <Sun className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold">Light Mode</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Crisp daylight contrast</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Interface Theme Selector */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
             <LayoutGrid className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>Interface Theme</span>
           </div>
@@ -225,31 +284,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectUiTheme('groover')}
               className={`min-h-[52px] px-3.5 py-2.5 rounded-xl border transition-colors text-left ${
                 uiTheme === 'groover'
-                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                  : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
               }`}
             >
-              <p className="text-xs font-semibold">GrooveR Dark</p>
-              <p className="text-[11px] text-zinc-400 truncate mt-0.5">Modern slate & bottom tabs</p>
+              <p className="text-xs font-semibold">GrooveR Modern</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Rounded cards & bottom tabs</p>
             </button>
             <button
               type="button"
               onClick={() => onSelectUiTheme('pivot')}
               className={`min-h-[52px] px-3.5 py-2.5 rounded-xl border transition-colors text-left ${
                 uiTheme === 'pivot'
-                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                  : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
               }`}
             >
               <p className="text-xs font-semibold">Metro Pivot</p>
-              <p className="text-[11px] text-zinc-400 truncate mt-0.5">Swipe headers & A–Z tiles</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Swipe headers & A–Z tiles</p>
             </button>
           </div>
         </div>
 
         {/* Button Color Scheme Setting */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
             <Palette className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>Button Color Scheme</span>
           </div>
@@ -263,13 +322,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => onSelectButtonColorScheme(preset.id)}
                   className={`min-h-[48px] px-3 py-2 rounded-xl flex items-center justify-between gap-2 border transition-colors text-left ${
                     selected
-                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                      : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                      : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
                   }`}
                 >
                   <span className="flex items-center gap-2 min-w-0">
                     <span
-                      className="w-4 h-4 rounded-full shrink-0 border border-white/25"
+                      className="w-4 h-4 rounded-full shrink-0 border border-black/15 dark:border-white/25"
                       style={{ backgroundColor: preset.primary }}
                       aria-hidden="true"
                     />
@@ -284,7 +343,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Songs Display Layout Setting */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
             <Layers className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>Songs Screen Display</span>
           </div>
@@ -294,14 +353,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectSongsDisplayMode('list')}
               className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
                 songsDisplayMode === 'list'
-                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                  : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
               }`}
             >
               <List className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold">Song List</p>
-                <p className="text-[11px] text-zinc-400 truncate">Compact rows</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Compact rows</p>
               </div>
             </button>
             <button
@@ -309,23 +368,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => onSelectSongsDisplayMode('deck')}
               className={`min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 border transition-colors text-left ${
                 songsDisplayMode === 'deck'
-                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                  : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                  ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                  : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
               }`}
             >
               <Layers className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold">Deck of Cards</p>
-                <p className="text-[11px] text-zinc-400 truncate">Swipeable stack</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Swipeable stack</p>
               </div>
             </button>
           </div>
         </div>
 
         {/* Global Song Speed (bits/sec) Setting Slider */}
-        <div className="p-3.5 rounded-xl bg-[#0D0F14] border border-white/[0.07] space-y-2.5">
+        <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-[#0D0F14] border border-zinc-200 dark:border-white/[0.07] space-y-2.5">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
               <Gauge className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Global Song Speed</span>
             </div>
@@ -337,7 +396,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onChangePlaybackRate(1)}
-                  className="min-h-[28px] px-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[11px] font-medium text-zinc-200 inline-flex items-center gap-1 transition-colors"
+                  className="min-h-[28px] px-2 rounded-lg bg-black/[0.06] dark:bg-white/[0.06] hover:bg-black/[0.12] dark:hover:bg-white/[0.12] text-[11px] font-medium text-zinc-800 dark:text-zinc-200 inline-flex items-center gap-1 transition-colors"
                   aria-label="Reset song speed to 1.00x"
                 >
                   <RotateCcw className="w-3 h-3" />
@@ -348,7 +407,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <div className="relative h-9 flex items-center">
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-[#2E3545] border border-white/20 overflow-hidden pointer-events-none">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-zinc-300 dark:bg-[#2E3545] border border-zinc-400/40 dark:border-white/20 overflow-hidden pointer-events-none">
               <div
                 className="h-full bg-[var(--accent-primary)] rounded-full"
                 style={{
@@ -357,7 +416,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             </div>
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-white/75 rounded-full pointer-events-none"
+              className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-zinc-700/75 dark:bg-white/75 rounded-full pointer-events-none"
               style={{ left: '33.3333%' }}
               aria-hidden="true"
             />
@@ -373,7 +432,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between gap-2 text-[11px] font-mono-nums text-zinc-400">
+          <div className="flex items-center justify-between gap-2 text-[11px] font-mono-nums text-zinc-500 dark:text-zinc-400">
             <span className="whitespace-nowrap">0.50× · {Math.round(minBps / 1000)}k</span>
             <span className="whitespace-nowrap">1.00× · {Math.round(baseBps / 1000)}k</span>
             <span className="whitespace-nowrap">2.00× · {Math.round(maxBps / 1000)}k</span>
@@ -383,7 +442,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* UI Scaling Setting */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
               <Maximize2 className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>UI Scaling</span>
             </div>
@@ -402,12 +461,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => onSelectUiScale(preset.value)}
                   className={`min-h-[48px] px-2 py-2 rounded-xl flex flex-col items-center justify-center border transition-colors ${
                     selected
-                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                      : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                      : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
                   }`}
                 >
                   <span className="text-xs font-semibold font-mono-nums">{preset.percentLabel}</span>
-                  <span className="text-[10px] text-zinc-400 mt-0.5">{preset.label}</span>
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{preset.label}</span>
                 </button>
               );
             })}
@@ -415,12 +474,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Lockscreen Player Widget Toggle */}
-        <div className="p-3.5 rounded-xl bg-[#0D0F14] border border-white/[0.07] flex items-center justify-between gap-3">
+        <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-[#0D0F14] border border-zinc-200 dark:border-white/[0.07] flex items-center justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
             <Smartphone className="w-4 h-4 text-[var(--accent-primary)] mt-0.5 shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white">Lockscreen Player Widget</p>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-white">Lockscreen Player Widget</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                 Standard OS MediaSession playback controls on lockscreen & earbuds
               </p>
             </div>
@@ -431,7 +490,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             aria-checked={lockscreenWidget}
             onClick={() => onToggleLockscreenWidget(!lockscreenWidget)}
             className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
-              lockscreenWidget ? 'bg-[var(--accent-primary)]' : 'bg-white/15'
+              lockscreenWidget ? 'bg-[var(--accent-primary)]' : 'bg-zinc-300 dark:bg-white/15'
             }`}
             aria-label="Toggle lockscreen player widget"
           >
@@ -445,7 +504,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Font Setting */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
             <Type className="w-4 h-4 text-[var(--accent-primary)]" />
             <span>App Font</span>
           </div>
@@ -460,8 +519,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => onSelectFont(preset.id)}
                   className={`w-full min-h-[54px] px-3.5 py-2.5 rounded-xl flex items-center justify-between gap-3 text-left border transition-colors ${
                     selected
-                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                      : 'bg-[#0D0F14] border-white/[0.06] text-zinc-200 hover:border-white/15'
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                      : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-800 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-white/15'
                   }`}
                 >
                   <div
@@ -472,7 +531,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }}
                   >
                     <p className="text-sm font-semibold truncate">{preset.label}</p>
-                    <p className="text-xs text-zinc-400 truncate mt-0.5">{preset.description}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{preset.description}</p>
                   </div>
                   {selected && <Check className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />}
                 </button>
@@ -482,20 +541,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Audio DSP Shortcut */}
-        <div className="pt-2 border-t border-white/[0.08]">
+        <div className="pt-2 border-t border-zinc-200 dark:border-white/[0.08]">
           <button
             type="button"
             onClick={() => {
               dismissAnimated();
               onOpenEq();
             }}
-            className="w-full min-h-[46px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-sm font-medium text-white flex items-center justify-between transition-colors"
+            className="w-full min-h-[46px] px-4 rounded-xl bg-zinc-100 dark:bg-white/[0.05] hover:bg-zinc-200 dark:hover:bg-white/[0.09] border border-zinc-200 dark:border-white/[0.08] text-sm font-medium text-zinc-900 dark:text-white flex items-center justify-between transition-colors"
           >
             <span className="flex items-center gap-2.5">
               <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>5-Band Equalizer</span>
             </span>
-            <span className="text-xs text-zinc-400">Open DSP</span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">Open DSP</span>
           </button>
         </div>
       </div>

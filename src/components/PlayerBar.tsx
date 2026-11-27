@@ -77,8 +77,8 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
     <footer
       className={`hidden lg:grid grid-cols-[minmax(220px,1fr)_minmax(340px,1.4fr)_minmax(220px,1fr)] items-center h-20 px-5 backdrop-blur-xl border-t shrink-0 z-30 ${
         uiTheme === 'pivot'
-          ? 'bg-black/95 border-white/[0.12]'
-          : 'bg-[#0D0F14]/95 border-white/[0.08]'
+          ? 'bg-white/95 dark:bg-black/95 border-zinc-200 dark:border-white/[0.12]'
+          : 'bg-white/95 dark:bg-[#0D0F14]/95 border-zinc-200 dark:border-white/[0.08]'
       }`}
     >
       {/* Left: Track summary */}
@@ -102,11 +102,11 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
               <button
                 type="button"
                 onClick={onOpenNowPlaying}
-                className="block text-left text-sm font-semibold text-white hover:text-[var(--accent-soft)] transition-colors truncate max-w-full"
+                className="block text-left text-sm font-semibold text-zinc-900 dark:text-white hover:text-[var(--accent-soft)] transition-colors truncate max-w-full"
               >
                 {currentTrack.title}
               </button>
-              <p className="text-xs text-zinc-400 truncate mt-0.5">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
                 {currentTrack.artist} <span aria-hidden="true">·</span> {currentTrack.format}
               </p>
             </div>
@@ -116,7 +116,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
               className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors shrink-0 ${
                 currentTrack.isFavorite
                   ? 'text-[var(--accent-primary)] hover:bg-[var(--accent-tint)]'
-                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05]'
+                  : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'
               }`}
               aria-label={currentTrack.isFavorite ? 'Remove favorite' : 'Add favorite'}
             >
@@ -125,9 +125,9 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           </>
         ) : (
           <div className="flex items-center gap-3 text-zinc-500">
-            <div className="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/[0.06]" />
+            <div className="w-12 h-12 rounded-xl bg-black/[0.04] dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]" />
             <div>
-              <p className="text-sm font-medium text-zinc-400">Ready to play</p>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Ready to play</p>
               <p className="text-xs text-zinc-500">Select any offline track</p>
             </div>
           </div>
@@ -141,7 +141,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onToggleShuffle}
             className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg transition-colors ${
-              shuffle ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
+              shuffle ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
             aria-label="Toggle shuffle"
             title="Shuffle"
@@ -153,7 +153,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onPrev}
             disabled={!currentTrack}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-zinc-200 hover:text-white disabled:opacity-35 transition-colors"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white disabled:opacity-35 transition-colors"
             aria-label="Previous track"
           >
             <SkipBack className="w-4 h-4 fill-current" />
@@ -163,7 +163,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onTogglePlay}
             disabled={!currentTrack}
-            className="w-10 h-10 rounded-full bg-white text-[#090A0D] hover:scale-105 active:scale-95 disabled:opacity-35 flex items-center justify-center transition-transform shadow-sm"
+            className="w-10 h-10 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-[#090A0D] hover:scale-105 active:scale-95 disabled:opacity-35 flex items-center justify-center transition-transform shadow-sm"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
@@ -177,7 +177,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onNext}
             disabled={!currentTrack}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-zinc-200 hover:text-white disabled:opacity-35 transition-colors"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white disabled:opacity-35 transition-colors"
             aria-label="Next track"
           >
             <SkipForward className="w-4 h-4 fill-current" />
@@ -187,7 +187,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             type="button"
             onClick={onCycleRepeat}
             className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg transition-colors ${
-              repeat !== 'off' ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-400 hover:text-white'
+              repeat !== 'off' ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
             aria-label={`Repeat mode: ${repeat}`}
             title={`Repeat: ${repeat}`}
@@ -197,11 +197,11 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
         </div>
 
         <div className="w-full max-w-lg flex items-center gap-2.5">
-          <span className="text-[11px] font-mono-nums text-zinc-400 w-10 text-right shrink-0">
+          <span className="text-[11px] font-mono-nums text-zinc-500 dark:text-zinc-400 w-10 text-right shrink-0">
             {formatDuration(currentTime)}
           </span>
           <div className="relative flex-1 h-4 flex items-center">
-            <div className="w-full h-1 rounded-full bg-white/15 overflow-hidden">
+            <div className="w-full h-1 rounded-full bg-zinc-300 dark:bg-white/15 overflow-hidden">
               <div
                 className="h-full bg-[var(--accent-primary)]"
                 style={{ width: `${progress}%` }}
@@ -219,7 +219,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
               className="groover-range absolute inset-0 w-full opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
             />
           </div>
-          <span className="text-[11px] font-mono-nums text-zinc-400 w-10 shrink-0">
+          <span className="text-[11px] font-mono-nums text-zinc-500 dark:text-zinc-400 w-10 shrink-0">
             {formatDuration(safeDuration)}
           </span>
         </div>
@@ -233,7 +233,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           className={`min-h-[38px] px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
             sleepRemainingMin !== null
               ? 'text-[var(--accent-primary)] bg-[var(--accent-tint)]'
-              : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'
           }`}
           title="Sleep timer"
           aria-label="Sleep timer"
@@ -247,7 +247,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
         <button
           type="button"
           onClick={onOpenEq}
-          className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+          className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors"
           title="Equalizer"
           aria-label="Open equalizer"
         >
@@ -257,7 +257,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
         <button
           type="button"
           onClick={onOpenQueue}
-          className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+          className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors"
           title="Up Next Queue"
           aria-label="Open queue"
         >
@@ -268,7 +268,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           <button
             type="button"
             onClick={onToggleMute}
-            className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-white"
+            className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted || volume === 0 ? (
@@ -278,9 +278,9 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             )}
           </button>
           <div className="relative w-20 h-4 flex items-center">
-            <div className="w-full h-1 rounded-full bg-white/15 overflow-hidden">
+            <div className="w-full h-1 rounded-full bg-zinc-300 dark:bg-white/15 overflow-hidden">
               <div
-                className="h-full bg-zinc-200"
+                className="h-full bg-zinc-700 dark:bg-zinc-200"
                 style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
               />
             </div>
@@ -301,7 +301,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           type="button"
           onClick={onOpenNowPlaying}
           disabled={!currentTrack}
-          className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 transition-colors"
+          className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] disabled:opacity-30 transition-colors"
           title="Expand Now Playing"
           aria-label="Expand Now Playing"
         >

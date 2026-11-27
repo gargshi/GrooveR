@@ -28,12 +28,12 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#0D0F14] border-l border-white/10 h-full flex flex-col shadow-2xl pt-safe">
-        <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.08] shrink-0">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/45 dark:bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-md bg-white dark:bg-[#0D0F14] border-l border-zinc-200 dark:border-white/10 h-full flex flex-col shadow-2xl pt-safe">
+        <div className="flex items-center justify-between px-5 h-16 border-b border-zinc-200 dark:border-white/[0.08] shrink-0">
           <div>
-            <h2 className="font-display text-base font-bold text-white">Up Next Queue</h2>
-            <p className="text-xs font-mono-nums text-zinc-400">
+            <h2 className="font-display text-base font-bold text-zinc-900 dark:text-white">Up Next Queue</h2>
+            <p className="text-xs font-mono-nums text-zinc-500 dark:text-zinc-400">
               {queueTracks.length} {queueTracks.length === 1 ? 'track' : 'tracks'}
             </p>
           </div>
@@ -42,7 +42,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
               <button
                 type="button"
                 onClick={onClearQueue}
-                className="min-h-[38px] px-3 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] whitespace-nowrap"
+                className="min-h-[38px] px-3 rounded-lg text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] whitespace-nowrap"
               >
                 Clear
               </button>
@@ -50,7 +50,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
               aria-label="Close queue"
             >
               <X className="w-5 h-5" />
@@ -61,7 +61,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {queueTracks.length === 0 ? (
             <div className="py-16 text-center px-4">
-              <p className="text-sm font-medium text-zinc-300">Queue is empty</p>
+              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Queue is empty</p>
               <p className="text-xs text-zinc-500 mt-1">
                 Play a track or add songs to build your playback order.
               </p>
@@ -75,7 +75,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                   className={`flex items-center gap-2.5 p-2 rounded-xl transition-colors ${
                     isCurrent
                       ? 'bg-[var(--accent-tint)] border border-[var(--accent-border)]'
-                      : 'hover:bg-white/[0.04]'
+                      : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
                   }`}
                 >
                   <button
@@ -91,10 +91,10 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                       iconSize="w-4 h-4"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[var(--accent-soft)]' : 'text-white'}`}>
+                      <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-[var(--accent-soft)]' : 'text-zinc-900 dark:text-white'}`}>
                         {trk.title}
                       </p>
-                      <p className="text-xs text-zinc-400 truncate">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                         {trk.artist} <span aria-hidden="true">·</span>{' '}
                         <span className="font-mono-nums">{formatDuration(trk.duration)}</span>
                       </p>
@@ -106,7 +106,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                       type="button"
                       disabled={idx === 0}
                       onClick={() => onMoveItem(idx, idx - 1)}
-                      className="min-h-[36px] min-w-[32px] flex items-center justify-center rounded-lg text-zinc-500 hover:text-white disabled:opacity-25"
+                      className="min-h-[36px] min-w-[32px] flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white disabled:opacity-25"
                       aria-label="Move up"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
@@ -115,7 +115,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                       type="button"
                       disabled={idx === queueTracks.length - 1}
                       onClick={() => onMoveItem(idx, idx + 1)}
-                      className="min-h-[36px] min-w-[32px] flex items-center justify-center rounded-lg text-zinc-500 hover:text-white disabled:opacity-25"
+                      className="min-h-[36px] min-w-[32px] flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white disabled:opacity-25"
                       aria-label="Move down"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -123,7 +123,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
                     <button
                       type="button"
                       onClick={() => onRemoveIndex(idx)}
-                      className="min-h-[36px] min-w-[32px] flex items-center justify-center rounded-lg text-zinc-500 hover:text-rose-400"
+                      className="min-h-[36px] min-w-[32px] flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400"
                       aria-label="Remove from queue"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

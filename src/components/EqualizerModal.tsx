@@ -59,19 +59,19 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 dark:bg-black/75 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="5-Band Equalizer"
     >
-      <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-5 pb-safe">
+      <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#12151C] border border-zinc-200 dark:border-white/10 p-5 sm:p-6 shadow-2xl space-y-5 pb-safe">
         {/* Drag handle on mobile */}
-        <div className="sm:hidden w-10 h-1 bg-zinc-700 rounded-full mx-auto -mt-1 mb-2" />
+        <div className="sm:hidden w-10 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full mx-auto -mt-1 mb-2" />
 
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-lg font-bold text-white">5-Band Equalizer</h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <h2 className="font-display text-lg font-bold text-zinc-900 dark:text-white">5-Band Equalizer</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               Real-time Web Audio DSP · {eq.enabled ? eq.presetName : 'Bypassed'}
             </p>
           </div>
@@ -82,7 +82,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
               className={`min-h-[38px] px-3 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap ${
                 eq.enabled
                   ? 'bg-[var(--accent-primary)] text-[var(--accent-contrast)]'
-                  : 'bg-white/[0.06] text-zinc-400 hover:text-white'
+                  : 'bg-black/[0.06] dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               {eq.enabled ? 'Enabled' : 'Bypassed'}
@@ -90,7 +90,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06]"
               aria-label="Close equalizer"
             >
               <X className="w-5 h-5" />
@@ -110,7 +110,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
                 className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                   active
                     ? 'bg-[var(--accent-tint)] text-[var(--accent-soft)] border border-[var(--accent-border)]'
-                    : 'bg-white/[0.04] text-zinc-300 border border-white/[0.06] hover:bg-white/[0.08]'
+                    : 'bg-zinc-100 dark:bg-white/[0.04] text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.08]'
                 }`}
               >
                 {presetName}
@@ -126,7 +126,7 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
             return (
               <div
                 key={band.key}
-                className="flex flex-col items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+                className="flex flex-col items-center gap-2 p-2.5 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]"
               >
                 <span className="text-[11px] font-mono-nums text-[var(--accent-soft)]">
                   {val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)}
@@ -143,13 +143,13 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
                     aria-label={`${band.label} gain`}
                     className="groover-range w-28 -rotate-90 accent-[var(--accent-primary)]"
                     style={{
-                      background: 'linear-gradient(to right, rgba(255,255,255,0.14), var(--accent-dim))',
+                      background: 'linear-gradient(to right, rgba(128,128,128,0.28), var(--accent-dim))',
                       height: '4px',
                       borderRadius: '9999px',
                     }}
                   />
                 </div>
-                <span className="text-[11px] font-medium text-zinc-400 whitespace-nowrap">
+                <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
                   {band.label}
                 </span>
               </div>
@@ -158,11 +158,11 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
         </div>
 
         {/* Preamp & Reset */}
-        <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/[0.07]">
+        <div className="flex items-center justify-between gap-4 pt-2 border-t border-zinc-200 dark:border-white/[0.07]">
           <div className="flex-1 space-y-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-medium">Preamp Gain</span>
-              <span className="font-mono-nums text-zinc-200">
+              <span className="text-zinc-500 dark:text-zinc-400 font-medium">Preamp Gain</span>
+              <span className="font-mono-nums text-zinc-700 dark:text-zinc-200">
                 {eq.preamp > 0 ? `+${eq.preamp.toFixed(1)}` : eq.preamp.toFixed(1)} dB
               </span>
             </div>
@@ -175,14 +175,14 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
               disabled={!eq.enabled}
               onChange={(e) => onChange({ ...eq, preamp: parseFloat(e.target.value) })}
               aria-label="Preamp gain"
-              className="groover-range w-full h-1.5 rounded-full bg-white/15"
+              className="groover-range w-full h-1.5 rounded-full bg-zinc-300 dark:bg-white/15"
             />
           </div>
 
           <button
             type="button"
             onClick={handleReset}
-            className="min-h-[44px] px-3.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-xs font-medium text-zinc-200 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+            className="min-h-[44px] px-3.5 rounded-xl bg-black/[0.05] dark:bg-white/[0.05] hover:bg-black/[0.09] dark:hover:bg-white/[0.09] text-xs font-medium text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset</span>

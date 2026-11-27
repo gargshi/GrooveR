@@ -21,19 +21,19 @@ export const CoverArt: React.FC<CoverArtProps> = ({
   if (!src || errored) {
     return (
       <div
-        className={`relative overflow-hidden flex items-center justify-center bg-[#181C24] border border-white/[0.07] shrink-0 ${className}`}
+        className={`relative overflow-hidden flex items-center justify-center bg-zinc-200/80 dark:bg-[#181C24] border border-zinc-300/70 dark:border-white/[0.07] shrink-0 ${className}`}
         style={{
           backgroundImage: `radial-gradient(circle at 25% 20%, ${accentColor}33, transparent 70%)`,
         }}
         aria-label={alt}
       >
-        <Disc3 className={`${iconSize} text-zinc-400`} />
+        <Disc3 className={`${iconSize} text-zinc-500 dark:text-zinc-400`} />
       </div>
     );
   }
 
   return (
-    <div className={`relative overflow-hidden bg-[#14171F] shrink-0 ${className}`}>
+    <div className={`relative overflow-hidden bg-zinc-200 dark:bg-[#14171F] shrink-0 ${className}`}>
       <img
         src={src}
         alt={alt}

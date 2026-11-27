@@ -137,14 +137,14 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 dark:bg-black/75 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={editingPlaylist ? 'Edit Smart Playlist' : 'Generate Smart Playlist'}
     >
       <form
         onSubmit={(e) => void handleSubmit(e)}
-        className="w-full sm:max-w-xl max-h-[90dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-5 pb-safe"
+        className="w-full sm:max-w-xl max-h-[90dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#12151C] border border-zinc-200 dark:border-white/10 p-5 sm:p-6 shadow-2xl space-y-5 pb-safe"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -152,10 +152,10 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
               <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
             </span>
             <div>
-              <h2 className="font-display text-lg font-bold text-white">
+              <h2 className="font-display text-lg font-bold text-zinc-900 dark:text-white">
                 {editingPlaylist ? 'Edit Smart Playlist Rules' : 'Generate Smart Playlist'}
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Auto-updates whenever you import or play songs
               </p>
             </div>
@@ -163,7 +163,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -172,7 +172,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
 
         {/* Quick Presets */}
         <div className="space-y-2">
-          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             Quick Templates
           </span>
           <div className="flex flex-wrap gap-2">
@@ -181,7 +181,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                 key={preset.id}
                 type="button"
                 onClick={() => handleApplyPreset(preset.id)}
-                className="min-h-[36px] px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-medium text-zinc-200 transition-colors"
+                className="min-h-[36px] px-3 rounded-xl bg-zinc-100 dark:bg-white/[0.05] hover:bg-zinc-200 dark:hover:bg-white/[0.1] border border-zinc-200 dark:border-white/[0.08] text-xs font-medium text-zinc-700 dark:text-zinc-200 transition-colors"
               >
                 {preset.label}
               </button>
@@ -192,7 +192,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
         {/* Name & Description */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Playlist Name</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Playlist Name</span>
             <input
               type="text"
               value={name}
@@ -202,17 +202,17 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
               }}
               placeholder="Recently Added"
               required
-              className="w-full min-h-[42px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Description (optional)</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Description (optional)</span>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={autoDescription}
-              className="w-full min-h-[42px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
         </div>
@@ -220,7 +220,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
         {/* Genres Filter */}
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Genres {rules.genres.length > 0 ? `(${rules.genres.length} selected)` : '(All)'}
             </span>
             {rules.genres.length > 0 && (
@@ -248,7 +248,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                     className={`min-h-[34px] px-3 rounded-lg border text-xs font-medium inline-flex items-center gap-1.5 transition-colors ${
                       selected
                         ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--accent-contrast)]'
-                        : 'bg-[#090A0D] border-white/10 text-zinc-300 hover:border-white/25'
+                        : 'bg-zinc-50 dark:bg-[#090A0D] border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/25'
                     }`}
                   >
                     <span>{item.genre}</span>
@@ -296,13 +296,13 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                 }
               }}
               placeholder="Add custom genre filter (e.g. Rock, Synthwave)"
-              className="flex-1 min-h-[38px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
+              className="flex-1 min-h-[38px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-primary)]"
             />
             <button
               type="button"
               onClick={handleAddCustomGenre}
               disabled={!customGenre.trim()}
-              className="min-h-[38px] px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] disabled:opacity-40 text-xs font-medium text-zinc-200"
+              className="min-h-[38px] px-3 rounded-xl bg-black/[0.06] dark:bg-white/[0.06] hover:bg-black/[0.1] dark:hover:bg-white/[0.12] disabled:opacity-40 text-xs font-medium text-zinc-700 dark:text-zinc-200"
             >
               Add
             </button>
@@ -312,7 +312,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
         {/* Time Window & Play Count */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Added Within</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Added Within</span>
             <select
               value={rules.addedWithin}
               onChange={(e) =>
@@ -321,7 +321,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                   addedWithin: e.target.value as SmartPlaylistAddedWithin,
                 }))
               }
-              className="w-full min-h-[42px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             >
               <option value="any">Anytime</option>
               <option value="7d">Last 7 Days</option>
@@ -331,7 +331,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Minimum Plays</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Minimum Plays</span>
             <select
               value={String(rules.minPlayCount)}
               onChange={(e) =>
@@ -340,7 +340,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                   minPlayCount: Number(e.target.value) || 0,
                 }))
               }
-              className="w-full min-h-[42px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             >
               <option value="0">Any play count</option>
               <option value="1">1+ plays</option>
@@ -354,7 +354,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
         {/* Sort Order & Limit */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Sort Order</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Sort Order</span>
             <select
               value={rules.sortBy}
               onChange={(e) =>
@@ -363,7 +363,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                   sortBy: e.target.value as SmartPlaylistSort,
                 }))
               }
-              className="w-full min-h-[42px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             >
               <option value="addedAt-desc">Recently Added</option>
               <option value="playCount-desc">Most Played</option>
@@ -374,7 +374,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Max Songs</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Max Songs</span>
             <select
               value={rules.limit === null ? 'all' : String(rules.limit)}
               onChange={(e) =>
@@ -383,7 +383,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                   limit: e.target.value === 'all' ? null : Number(e.target.value),
                 }))
               }
-              className="w-full min-h-[42px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             >
               <option value="15">Up to 15 songs</option>
               <option value="25">Up to 25 songs</option>
@@ -404,8 +404,8 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
             aria-pressed={rules.favoritesOnly}
             className={`min-h-[40px] px-3.5 rounded-xl border text-xs font-medium transition-colors ${
               rules.favoritesOnly
-                ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                : 'bg-[#090A0D] border-white/10 text-zinc-400 hover:text-zinc-200'
+                ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                : 'bg-zinc-50 dark:bg-[#090A0D] border-zinc-200 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
             Favorites Only
@@ -419,8 +419,8 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
             aria-pressed={rules.losslessOnly}
             className={`min-h-[40px] px-3.5 rounded-xl border text-xs font-medium transition-colors ${
               rules.losslessOnly
-                ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                : 'bg-[#090A0D] border-white/10 text-zinc-400 hover:text-zinc-200'
+                ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                : 'bg-zinc-50 dark:bg-[#090A0D] border-zinc-200 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
             Lossless Only (FLAC / WAV)
@@ -428,9 +428,9 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
         </div>
 
         {/* Live Match Preview */}
-        <div className="p-3.5 rounded-xl bg-[#090A0D] border border-white/[0.08] space-y-1">
+        <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-200 dark:border-white/[0.08] space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-zinc-300">Live Match Preview</span>
+            <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Live Match Preview</span>
             <span className="text-xs font-mono-nums font-semibold text-[var(--accent-soft)]">
               {matchingTracks.length} {matchingTracks.length === 1 ? 'song' : 'songs'}
             </span>
@@ -451,7 +451,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-sm font-medium text-zinc-300"
+            className="min-h-[44px] px-4 rounded-xl bg-black/[0.05] dark:bg-white/[0.05] hover:bg-black/[0.09] dark:hover:bg-white/[0.09] text-sm font-medium text-zinc-700 dark:text-zinc-300"
           >
             Cancel
           </button>

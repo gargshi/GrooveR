@@ -104,6 +104,8 @@ export type SongsDisplayMode = 'list' | 'deck';
 
 export type UiTheme = 'groover' | 'pivot';
 
+export type ColorMode = 'dark' | 'light';
+
 export type ButtonColorScheme = 'blue' | 'cyan' | 'emerald' | 'crimson' | 'amber' | 'orange';
 
 export interface PersistedSettings {
@@ -118,6 +120,7 @@ export interface PersistedSettings {
   lockscreenWidget: boolean;
   songsDisplayMode: SongsDisplayMode;
   uiTheme: UiTheme;
+  colorMode: ColorMode;
   buttonColorScheme: ButtonColorScheme;
   eq: EqSettings;
   lastTrackId?: string;

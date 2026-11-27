@@ -56,7 +56,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       } ${
         isActive
           ? 'bg-[var(--accent-tint)]'
-          : 'hover:bg-white/[0.04]'
+          : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
       }`}
     >
       {/* Index / Play button */}
@@ -64,7 +64,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         <button
           type="button"
           onClick={onPlay}
-          className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-xs font-mono-nums text-zinc-500 hover:text-white shrink-0"
+          className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-xs font-mono-nums text-zinc-500 hover:text-zinc-900 dark:hover:text-white shrink-0"
           aria-label={`Play ${track.title}`}
         >
           {isActive && isPlaying ? (
@@ -73,7 +73,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             <span className="group-hover:hidden">{index + 1}</span>
           )}
           {!(isActive && isPlaying) && (
-            <Play className="hidden group-hover:block w-3.5 h-3.5 fill-current text-white" />
+            <Play className="hidden group-hover:block w-3.5 h-3.5 fill-current text-zinc-900 dark:text-white" />
           )}
         </button>
       )}
@@ -94,10 +94,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           />
           {isPivot && isActive && (
             <div
-              className="absolute -right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black border-2 border-white flex items-center justify-center shadow"
+              className="absolute -right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white dark:bg-black border-2 border-zinc-900 dark:border-white flex items-center justify-center shadow"
               aria-hidden="true"
             >
-              <Play className="w-2.5 h-2.5 fill-white text-white ml-0.5" />
+              <Play className="w-2.5 h-2.5 fill-zinc-900 dark:fill-white text-zinc-900 dark:text-white ml-0.5" />
             </div>
           )}
         </div>
@@ -108,12 +108,12 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             } ${
               isActive
                 ? 'text-[var(--accent-soft)]'
-                : 'text-white'
+                : 'text-zinc-900 dark:text-white'
             }`}
           >
             {track.title}
           </p>
-          <p className="text-xs text-zinc-400 truncate mt-0.5">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
             {track.artist} <span aria-hidden="true">·</span> {track.album}
           </p>
         </div>
@@ -122,7 +122,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       {/* Desktop format & duration */}
       <div className="hidden md:flex items-center gap-3 text-xs font-mono-nums text-zinc-500 shrink-0">
         <span>{track.format}</span>
-        <span className="w-12 text-right text-zinc-400">{formatDuration(track.duration)}</span>
+        <span className="w-12 text-right text-zinc-500 dark:text-zinc-400">{formatDuration(track.duration)}</span>
       </div>
 
       {/* Mobile duration */}
@@ -138,7 +138,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           className={`min-h-[44px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors ${
             track.isFavorite
               ? 'text-[var(--accent-primary)]'
-              : 'text-zinc-500 hover:text-zinc-200 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'
+              : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'
           }`}
           aria-label={track.isFavorite ? 'Remove favorite' : 'Add favorite'}
         >
@@ -149,7 +149,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           <button
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="min-h-[44px] min-w-[40px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+            className="min-h-[44px] min-w-[40px] flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06]"
             aria-label={`Actions for ${track.title}`}
           >
             <MoreVertical className="w-4 h-4" />
@@ -162,16 +162,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                 onClick={() => setMenuOpen(false)}
                 aria-hidden="true"
               />
-              <div className="absolute right-0 top-11 z-50 w-52 rounded-xl bg-[#161922] border border-white/10 shadow-2xl p-1.5 space-y-0.5">
+              <div className="absolute right-0 top-11 z-50 w-52 rounded-xl bg-white dark:bg-[#161922] border border-zinc-200 dark:border-white/10 shadow-2xl p-1.5 space-y-0.5">
                 <button
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
                     onPlayNext();
                   }}
-                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-200 hover:bg-white/[0.07] flex items-center gap-2.5"
+                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] flex items-center gap-2.5"
                 >
-                  <ListPlus className="w-4 h-4 text-zinc-400" />
+                  <ListPlus className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                   <span>Play Next</span>
                 </button>
                 <button
@@ -180,9 +180,9 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                     setMenuOpen(false);
                     onAddToQueue();
                   }}
-                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-200 hover:bg-white/[0.07] flex items-center gap-2.5"
+                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] flex items-center gap-2.5"
                 >
-                  <PlusCircle className="w-4 h-4 text-zinc-400" />
+                  <PlusCircle className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                   <span>Add to Queue</span>
                 </button>
                 <button
@@ -191,14 +191,14 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                     setMenuOpen(false);
                     onEdit();
                   }}
-                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-200 hover:bg-white/[0.07] flex items-center gap-2.5"
+                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] flex items-center gap-2.5"
                 >
-                  <Edit3 className="w-4 h-4 text-zinc-400" />
+                  <Edit3 className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                   <span>Edit Track Info</span>
                 </button>
 
                 {playlists.some((pl) => !pl.isSmart) && (
-                  <div className="pt-1 mt-1 border-t border-white/[0.08]">
+                  <div className="pt-1 mt-1 border-t border-zinc-200 dark:border-white/[0.08]">
                     <p className="px-3 py-1 text-[11px] font-medium text-zinc-500">
                       Add to Playlist
                     </p>
@@ -212,7 +212,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                             setMenuOpen(false);
                             onAddToPlaylist(pl.id);
                           }}
-                          className="w-full min-h-[36px] px-3 rounded-lg text-left text-xs text-zinc-300 hover:bg-white/[0.07] truncate"
+                          className="w-full min-h-[36px] px-3 rounded-lg text-left text-xs text-zinc-600 dark:text-zinc-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] truncate"
                         >
                           {pl.name}
                         </button>
@@ -227,7 +227,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                       setMenuOpen(false);
                       onRemoveFromPlaylist();
                     }}
-                    className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-amber-300 hover:bg-amber-500/10 flex items-center gap-2.5 border-t border-white/[0.08] mt-1 pt-1"
+                    className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-amber-600 dark:text-amber-300 hover:bg-amber-500/10 flex items-center gap-2.5 border-t border-zinc-200 dark:border-white/[0.08] mt-1 pt-1"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>{removeFromPlaylistLabel}</span>
@@ -240,7 +240,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                     setMenuOpen(false);
                     onDelete();
                   }}
-                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 border-t border-white/[0.08] mt-1 pt-1"
+                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 border-t border-zinc-200 dark:border-white/[0.08] mt-1 pt-1"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Delete from Vault</span>

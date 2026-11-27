@@ -60,8 +60,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     <aside
       className={`hidden lg:flex flex-col w-64 shrink-0 border-r h-full select-none ${
         uiTheme === 'pivot'
-          ? 'bg-black border-white/[0.1]'
-          : 'bg-[#0D0F14] border-white/[0.07]'
+          ? 'bg-white dark:bg-black border-zinc-200 dark:border-white/[0.1]'
+          : 'bg-white dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.07]'
       }`}
     >
       {/* Brand */}
@@ -71,7 +71,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
           onClick={() => onSelectView('songs')}
           className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] rounded-lg"
         >
-          <span className="font-display text-xl font-bold tracking-tight text-white whitespace-nowrap">
+          <span className="font-display text-xl font-bold tracking-tight text-zinc-900 dark:text-white whitespace-nowrap">
             GrooveR
           </span>
         </button>
@@ -93,9 +93,9 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         <button
           type="button"
           onClick={onImportFolder}
-          className="w-full min-h-[40px] px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 text-xs font-medium flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+          className="w-full min-h-[40px] px-4 py-2 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-200 text-xs font-medium flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
         >
-          <FolderPlus className="w-4 h-4 shrink-0 text-zinc-400" />
+          <FolderPlus className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
           <span>Scan Music Folder</span>
         </button>
       </div>
@@ -112,11 +112,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               onClick={() => onSelectView(item.id)}
               className={`w-full min-h-[44px] px-3 rounded-xl flex items-center gap-3 text-sm font-medium transition-colors whitespace-nowrap ${
                 isActive
-                  ? 'bg-[var(--accent-tint)] text-white'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-[var(--accent-tint)] text-zinc-900 dark:text-white'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[var(--accent-primary)]' : 'text-zinc-500'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[var(--accent-primary)]' : 'text-zinc-400 dark:text-zinc-500'}`} />
               <span>{item.label}</span>
             </button>
           );
@@ -130,7 +130,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
           <button
             type="button"
             onClick={onGenerateSmartPlaylist}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[var(--accent-soft)] hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[var(--accent-soft)] hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-colors"
             aria-label="Generate smart playlist"
             title="Generate smart playlist"
           >
@@ -139,7 +139,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
           <button
             type="button"
             onClick={onCreatePlaylist}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-colors"
             aria-label="New playlist"
             title="New playlist"
           >
@@ -164,8 +164,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 onClick={() => onSelectPlaylist(pl.id)}
                 className={`w-full min-h-[40px] px-3 rounded-xl flex items-center justify-between text-left text-sm transition-colors ${
                   selected
-                    ? 'bg-white/[0.08] text-white font-medium'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]'
+                    ? 'bg-black/[0.07] dark:bg-white/[0.08] text-zinc-900 dark:text-white font-medium'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
                 }`}
               >
                 <span className="flex items-center gap-2 min-w-0 pr-2">
@@ -184,11 +184,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
       </div>
 
       {/* Bottom Utility */}
-      <div className="p-4 border-t border-white/[0.07] space-y-2">
+      <div className="p-4 border-t border-zinc-200 dark:border-white/[0.07] space-y-2">
         <button
           type="button"
           onClick={onOpenEq}
-          className="w-full min-h-[42px] px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 text-xs font-medium flex items-center justify-between transition-colors whitespace-nowrap"
+          className="w-full min-h-[42px] px-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] text-zinc-700 dark:text-zinc-200 text-xs font-medium flex items-center justify-between transition-colors whitespace-nowrap"
         >
           <span className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
@@ -199,10 +199,10 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         <button
           type="button"
           onClick={onOpenSettings}
-          className="w-full min-h-[42px] px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 text-xs font-medium flex items-center justify-between transition-colors whitespace-nowrap"
+          className="w-full min-h-[42px] px-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] text-zinc-700 dark:text-zinc-200 text-xs font-medium flex items-center justify-between transition-colors whitespace-nowrap"
         >
           <span className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-zinc-400" />
+            <Settings className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
             <span>Font & Settings</span>
           </span>
         </button>

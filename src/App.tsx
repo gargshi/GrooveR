@@ -11,7 +11,7 @@ import { SidebarNav } from './components/SidebarNav';
 import { SmartPlaylistModal } from './components/SmartPlaylistModal';
 import { TrackEditorModal } from './components/TrackEditorModal';
 import { GrooveAudioEngine } from './lib/audioEngine';
-import { applyAppFont, applyButtonColorScheme, applyUiScale } from './lib/fonts';
+import { applyAppFont, applyButtonColorScheme, applyColorMode, applyUiScale } from './lib/fonts';
 import {
   clearOfflineLibrary,
   DEFAULT_SETTINGS,
@@ -30,6 +30,7 @@ import {
 import { parseAudioFileToTrack } from './lib/metadataParser';
 import {
   ButtonColorScheme,
+  ColorMode,
   EqSettings,
   FontOption,
   LibraryView,
@@ -148,7 +149,8 @@ export default function App() {
         setSettings(loadedSettings);
         applyAppFont(loadedSettings.fontFamily);
         applyUiScale(loadedSettings.uiScale);
-        applyButtonColorScheme(loadedSettings.buttonColorScheme);
+        applyColorMode(loadedSettings.colorMode);
+        applyButtonColorScheme(loadedSettings.buttonColorScheme, loadedSettings.colorMode);
         engine.setVolume(loadedSettings.volume, loadedSettings.isMuted);
         engine.setPlaybackRate(loadedSettings.playbackRate);
         engine.applyEq(loadedSettings.eq);
@@ -192,8 +194,12 @@ export default function App() {
   }, [settings.uiScale]);
 
   useEffect(() => {
-    applyButtonColorScheme(settings.buttonColorScheme);
-  }, [settings.buttonColorScheme]);
+    applyColorMode(settings.colorMode);
+  }, [settings.colorMode]);
+
+  useEffect(() => {
+    applyButtonColorScheme(settings.buttonColorScheme, settings.colorMode);
+  }, [settings.buttonColorScheme, settings.colorMode]);
 
   useEffect(() => {
     engine.setPlaybackRate(settings.playbackRate);
@@ -1043,8 +1049,10 @@ export default function App() {
 
   return (
     <div
-      className={`h-dvh w-full flex flex-col text-[#F3F4F6] overflow-hidden select-none pt-safe ${
-        settings.uiTheme === 'pivot' ? 'bg-black' : 'bg-[#090A0D]'
+      className={`h-dvh w-full flex flex-col text-zinc-900 dark:text-[#F3F4F6] overflow-hidden select-none pt-safe transition-colors ${
+        settings.uiTheme === 'pivot'
+          ? 'bg-white dark:bg-black'
+          : 'bg-[#F4F6FA] dark:bg-[#090A0D]'
       }`}
       onDragOver={(e) => {
         e.preventDefault();
@@ -1169,6 +1177,10 @@ export default function App() {
               uiTheme={settings.uiTheme}
               onSelectUiTheme={(uiTheme: UiTheme) =>
                 updateSettings((prev) => ({ ...prev, uiTheme }))
+              }
+              colorMode={settings.colorMode}
+              onSelectColorMode={(colorMode: ColorMode) =>
+                updateSettings((prev) => ({ ...prev, colorMode }))
               }
               buttonColorScheme={settings.buttonColorScheme}
               onSelectButtonColorScheme={(buttonColorScheme: ButtonColorScheme) =>
@@ -1334,6 +1346,7 @@ export default function App() {
         lockscreenWidget={settings.lockscreenWidget}
         songsDisplayMode={settings.songsDisplayMode}
         uiTheme={settings.uiTheme}
+        colorMode={settings.colorMode}
         buttonColorScheme={settings.buttonColorScheme}
         playbackRate={settings.playbackRate}
         activeTrackBitrateKbps={currentTrack?.bitrateKbps}
@@ -1351,6 +1364,9 @@ export default function App() {
         }
         onSelectUiTheme={(uiTheme: UiTheme) =>
           updateSettings((prev) => ({ ...prev, uiTheme }))
+        }
+        onSelectColorMode={(colorMode: ColorMode) =>
+          updateSettings((prev) => ({ ...prev, colorMode }))
         }
         onSelectButtonColorScheme={(buttonColorScheme: ButtonColorScheme) =>
           updateSettings((prev) => ({ ...prev, buttonColorScheme }))
@@ -1394,10 +1410,10 @@ export default function App() {
 
       {/* Drag & Drop Overlay */}
       {isDraggingFiles && (
-        <div className="fixed inset-0 z-50 bg-[#090A0D]/90 backdrop-blur-md flex items-center justify-center p-6 pointer-events-none">
-          <div className="max-w-md w-full rounded-3xl border-2 border-dashed border-[var(--accent-primary)] bg-[#111318] p-10 text-center space-y-2">
-            <p className="font-display text-xl font-bold text-white">Drop audio files to import</p>
-            <p className="text-sm text-zinc-400">
+        <div className="fixed inset-0 z-50 bg-white/90 dark:bg-[#090A0D]/90 backdrop-blur-md flex items-center justify-center p-6 pointer-events-none">
+          <div className="max-w-md w-full rounded-3xl border-2 border-dashed border-[var(--accent-primary)] bg-white dark:bg-[#111318] p-10 text-center space-y-2 shadow-xl">
+            <p className="font-display text-xl font-bold text-zinc-900 dark:text-white">Drop audio files to import</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               MP3, FLAC, M4A, WAV, and OGG tracks are stored offline in your vault.
             </p>
           </div>
@@ -1409,7 +1425,7 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-32 lg:bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#181C26] border border-white/15 shadow-2xl text-xs font-medium text-white whitespace-nowrap"
+          className="fixed bottom-32 lg:bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-white dark:bg-[#181C26] border border-zinc-200 dark:border-white/15 shadow-2xl text-xs font-medium text-zinc-900 dark:text-white whitespace-nowrap"
         >
           {toastMessage}
         </div>

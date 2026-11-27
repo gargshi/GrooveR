@@ -70,24 +70,24 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 dark:bg-black/75 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Edit Track Metadata"
     >
       <form
         onSubmit={(e) => void handleSubmit(e)}
-        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto pb-safe"
+        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#12151C] border border-zinc-200 dark:border-white/10 p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto pb-safe"
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-lg font-bold text-white">Edit Track Info</h2>
-            <p className="text-xs text-zinc-400 truncate max-w-[260px]">{track.fileName}</p>
+            <h2 className="font-display text-lg font-bold text-zinc-900 dark:text-white">Edit Track Info</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[260px]">{track.fileName}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06]"
             aria-label="Close editor"
           >
             <X className="w-5 h-5" />
@@ -114,7 +114,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
             <button
               type="button"
               onClick={() => artInputRef.current?.click()}
-              className="min-h-[40px] px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-xs font-medium text-white inline-flex items-center gap-2 transition-colors whitespace-nowrap"
+              className="min-h-[40px] px-3.5 rounded-xl bg-black/[0.05] dark:bg-white/[0.06] hover:bg-black/[0.09] dark:hover:bg-white/[0.1] border border-zinc-300 dark:border-white/10 text-xs font-medium text-zinc-900 dark:text-white inline-flex items-center gap-2 transition-colors whitespace-nowrap"
             >
               <ImagePlus className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Change Album Art</span>
@@ -123,7 +123,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCoverArt(undefined)}
-                className="block text-xs text-zinc-400 hover:text-zinc-200"
+                className="block text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
               >
                 Remove artwork
               </button>
@@ -133,76 +133,76 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="sm:col-span-2 block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Title</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Title</span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Artist</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Artist</span>
             <input
               type="text"
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Album</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Album</span>
             <input
               type="text"
               value={album}
               onChange={(e) => setAlbum(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Album Artist</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Album Artist</span>
             <input
               type="text"
               value={albumArtist}
               onChange={(e) => setAlbumArtist(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Genre</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Genre</span>
             <input
               type="text"
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Year</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Year</span>
             <input
               type="text"
               maxLength={4}
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white font-mono-nums focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white font-mono-nums focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-xs font-medium text-zinc-400">Track Number</span>
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Track Number</span>
             <input
               type="number"
               min={0}
               max={999}
               value={trackNumber}
               onChange={(e) => setTrackNumber(e.target.value)}
-              className="w-full min-h-[44px] px-3 rounded-xl bg-[#090A0D] border border-white/10 text-sm text-white font-mono-nums focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[44px] px-3 rounded-xl bg-zinc-50 dark:bg-[#090A0D] border border-zinc-300 dark:border-white/10 text-sm text-zinc-900 dark:text-white font-mono-nums focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </label>
         </div>
@@ -211,7 +211,7 @@ export const TrackEditorModal: React.FC<TrackEditorModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-sm font-medium text-zinc-300"
+            className="min-h-[44px] px-4 rounded-xl bg-black/[0.05] dark:bg-white/[0.05] hover:bg-black/[0.09] dark:hover:bg-white/[0.09] text-sm font-medium text-zinc-700 dark:text-zinc-300"
           >
             Cancel
           </button>

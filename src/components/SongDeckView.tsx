@@ -224,14 +224,14 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                       ? 'none'
                       : 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease',
                   }}
-                  className={`absolute inset-0 rounded-3xl overflow-hidden bg-[#13161F] border ${
+                  className={`absolute inset-0 rounded-3xl overflow-hidden bg-white dark:bg-[#13161F] border ${
                     isFront && isFrontActive
-                      ? 'border-[var(--accent-border)] shadow-[0_24px_54px_rgba(0,0,0,0.65)]'
-                      : 'border-white/10 shadow-[0_20px_44px_rgba(0,0,0,0.55)]'
+                      ? 'border-[var(--accent-border)] shadow-[0_24px_54px_rgba(15,23,42,0.18)] dark:shadow-[0_24px_54px_rgba(0,0,0,0.65)]'
+                      : 'border-zinc-200 dark:border-white/10 shadow-[0_20px_44px_rgba(15,23,42,0.12)] dark:shadow-[0_20px_44px_rgba(0,0,0,0.55)]'
                   } flex flex-col ${isFront ? 'cursor-grab active:cursor-grabbing' : 'pointer-events-none'}`}
                 >
                   {/* Artwork Half */}
-                  <div className="relative flex-1 min-h-0 overflow-hidden bg-[#0D0F14]">
+                  <div className="relative flex-1 min-h-0 overflow-hidden bg-zinc-100 dark:bg-[#0D0F14]">
                     <CoverArt
                       src={trk.coverArt}
                       alt={trk.album}
@@ -239,11 +239,11 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                       className="w-full h-full rounded-none"
                       iconSize="w-16 h-16"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#13161F] via-[#13161F]/25 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/25 dark:from-[#13161F] dark:via-[#13161F]/25 to-transparent" />
 
                     {/* Top Card Index Counter (plain unboxed text with subtle scrim) */}
                     {isFront && (
-                      <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between text-xs font-mono-nums text-white/90 drop-shadow">
+                      <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between text-xs font-mono-nums text-white/95 drop-shadow-[0_1px_3px_rgba(0,0,0,0.75)]">
                         <span>
                           {safeIndex + 1} / {tracks.length}
                         </span>
@@ -253,16 +253,16 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                   </div>
 
                   {/* Card Details & Direct Play Controls */}
-                  <div className="px-5 pt-2 pb-5 space-y-4 bg-[#13161F]">
+                  <div className="px-5 pt-2 pb-5 space-y-4 bg-white dark:bg-[#13161F]">
                     <div className="min-w-0 space-y-1">
                       <h2
                         className={`font-display text-lg sm:text-xl font-bold truncate ${
-                          isFront && isFrontActive ? 'text-[var(--accent-soft)]' : 'text-white'
+                          isFront && isFrontActive ? 'text-[var(--accent-soft)]' : 'text-zinc-900 dark:text-white'
                         }`}
                       >
                         {trk.title}
                       </h2>
-                      <p className="text-xs sm:text-sm text-zinc-300 truncate">
+                      <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 truncate">
                         {trk.artist} <span aria-hidden="true">·</span> {trk.album}
                       </p>
                       <p className="text-xs font-mono-nums text-zinc-500">
@@ -280,7 +280,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                           className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-colors ${
                             trk.isFavorite
                               ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-[var(--accent-primary)]'
-                              : 'bg-white/[0.04] border-white/[0.08] text-zinc-300 hover:text-white'
+                              : 'bg-black/[0.04] dark:bg-white/[0.04] border-zinc-200 dark:border-white/[0.08] text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
                           }`}
                           aria-label={trk.isFavorite ? 'Remove favorite' : 'Add favorite'}
                         >
@@ -309,7 +309,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                           <button
                             type="button"
                             onClick={() => setMenuOpen((prev) => !prev)}
-                            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:text-white"
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-black/[0.04] dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.08] text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
                             aria-label={`Actions for ${trk.title}`}
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -322,16 +322,16 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                                 onClick={() => setMenuOpen(false)}
                                 aria-hidden="true"
                               />
-                              <div className="absolute right-0 bottom-12 z-50 w-52 rounded-xl bg-[#161922] border border-white/10 shadow-2xl p-1.5 space-y-0.5">
+                              <div className="absolute right-0 bottom-12 z-50 w-52 rounded-xl bg-white dark:bg-[#161922] border border-zinc-200 dark:border-white/10 shadow-2xl p-1.5 space-y-0.5">
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setMenuOpen(false);
                                     onPlayNext(trk);
                                   }}
-                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-200 hover:bg-white/[0.07] flex items-center gap-2.5"
+                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] flex items-center gap-2.5"
                                 >
-                                  <ListPlus className="w-4 h-4 text-zinc-400" />
+                                  <ListPlus className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                                   <span>Play Next</span>
                                 </button>
                                 <button
@@ -340,9 +340,9 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                                     setMenuOpen(false);
                                     onAddToQueue(trk);
                                   }}
-                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-200 hover:bg-white/[0.07] flex items-center gap-2.5"
+                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] flex items-center gap-2.5"
                                 >
-                                  <PlusCircle className="w-4 h-4 text-zinc-400" />
+                                  <PlusCircle className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                                   <span>Add to Queue</span>
                                 </button>
                                 <button
@@ -351,14 +351,14 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                                     setMenuOpen(false);
                                     onEditTrack(trk);
                                   }}
-                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-200 hover:bg-white/[0.07] flex items-center gap-2.5"
+                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] flex items-center gap-2.5"
                                 >
-                                  <Edit3 className="w-4 h-4 text-zinc-400" />
+                                  <Edit3 className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                                   <span>Edit Track Info</span>
                                 </button>
 
                                 {playlists.some((pl) => !pl.isSmart) && (
-                                  <div className="pt-1 mt-1 border-t border-white/[0.08]">
+                                  <div className="pt-1 mt-1 border-t border-zinc-200 dark:border-white/[0.08]">
                                     <p className="px-3 py-1 text-[11px] font-medium text-zinc-500">
                                       Add to Playlist
                                     </p>
@@ -372,7 +372,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                                             setMenuOpen(false);
                                             onAddToPlaylist(pl.id, trk.id);
                                           }}
-                                          className="w-full min-h-[36px] px-3 rounded-lg text-left text-xs text-zinc-300 hover:bg-white/[0.07] truncate"
+                                          className="w-full min-h-[36px] px-3 rounded-lg text-left text-xs text-zinc-600 dark:text-zinc-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] truncate"
                                         >
                                           {pl.name}
                                         </button>
@@ -386,7 +386,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                                     setMenuOpen(false);
                                     onDeleteTrack(trk.id);
                                   }}
-                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 border-t border-white/[0.08] mt-1 pt-1"
+                                  className="w-full min-h-[40px] px-3 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 border-t border-zinc-200 dark:border-white/[0.08] mt-1 pt-1"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                   <span>Delete from Vault</span>
@@ -410,7 +410,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
             type="button"
             onClick={handlePrevCard}
             disabled={tracks.length <= 1}
-            className="min-h-[44px] px-3.5 rounded-xl bg-[#111318] border border-white/[0.08] hover:border-white/20 disabled:opacity-40 text-zinc-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
+            className="min-h-[44px] px-3.5 rounded-xl bg-white dark:bg-[#111318] border border-zinc-200 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 disabled:opacity-40 text-zinc-700 dark:text-zinc-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
             aria-label="Previous song card"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -421,7 +421,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
             type="button"
             onClick={handleRandomCard}
             disabled={tracks.length <= 1}
-            className="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-[#111318] border border-white/[0.08] hover:border-white/20 disabled:opacity-40 text-zinc-300 hover:text-white inline-flex items-center justify-center gap-1.5 text-xs font-medium transition-colors whitespace-nowrap"
+            className="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-white dark:bg-[#111318] border border-zinc-200 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 disabled:opacity-40 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white inline-flex items-center justify-center gap-1.5 text-xs font-medium transition-colors whitespace-nowrap"
             aria-label="Deal random card"
           >
             <Shuffle className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
@@ -432,7 +432,7 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
             type="button"
             onClick={handleNextCard}
             disabled={tracks.length <= 1}
-            className="min-h-[44px] px-3.5 rounded-xl bg-[#111318] border border-white/[0.08] hover:border-white/20 disabled:opacity-40 text-zinc-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
+            className="min-h-[44px] px-3.5 rounded-xl bg-white dark:bg-[#111318] border border-zinc-200 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 disabled:opacity-40 text-zinc-700 dark:text-zinc-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
             aria-label="Next song card"
           >
             <span>Next Card</span>
@@ -446,11 +446,11 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
       </div>
 
       {/* Deck Stack Quick-Jump Column / Strip */}
-      <div className="lg:col-span-5 rounded-2xl bg-[#111318]/80 border border-white/[0.07] p-4 space-y-3">
+      <div className="lg:col-span-5 rounded-2xl bg-white dark:bg-[#111318]/80 border border-zinc-200 dark:border-white/[0.07] p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h3 className="text-sm font-semibold text-white">Deck Stack</h3>
-            <p className="text-xs text-zinc-400 font-mono-nums">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Deck Stack</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono-nums">
               Card {safeIndex + 1} of {tracks.length}
             </p>
           </div>
@@ -485,8 +485,8 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                 }}
                 className={`shrink-0 w-44 lg:w-full min-h-[56px] p-2.5 rounded-xl border text-left flex items-center gap-3 transition-colors ${
                   isSelected
-                    ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-white'
-                    : 'bg-[#0D0F14] border-white/[0.06] text-zinc-300 hover:border-white/15'
+                    ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                    : 'bg-zinc-50 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
                 }`}
               >
                 <CoverArt
@@ -499,12 +499,12 @@ export const SongDeckView: React.FC<SongDeckViewProps> = ({
                 <div className="min-w-0 flex-1">
                   <p
                     className={`text-xs font-semibold truncate ${
-                      isCurrent ? 'text-[var(--accent-soft)]' : 'text-white'
+                      isCurrent ? 'text-[var(--accent-soft)]' : 'text-zinc-900 dark:text-white'
                     }`}
                   >
                     {trk.title}
                   </p>
-                  <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
                     {trk.artist} · {formatDuration(trk.duration)}
                   </p>
                 </div>

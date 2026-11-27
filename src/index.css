@@ -26,6 +26,12 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html.light,
+  html.light body {
+    background-color: #F4F6FA;
+    color: #0F172A;
+  }
+
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
   }
@@ -48,10 +54,14 @@
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* Custom sleek dark scrollbars with inactivity auto-hide */
+/* Custom sleek scrollbars with inactivity auto-hide */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+html.light * {
+  scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -72,12 +82,22 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.22);
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.36);
+}
+
 html.scrollbars-hidden * {
   scrollbar-color: transparent transparent;
 }
 
 html.scrollbars-hidden ::-webkit-scrollbar-thumb,
-html.scrollbars-hidden ::-webkit-scrollbar-thumb:hover {
+html.scrollbars-hidden ::-webkit-scrollbar-thumb:hover,
+html.light.scrollbars-hidden ::-webkit-scrollbar-thumb,
+html.light.scrollbars-hidden ::-webkit-scrollbar-thumb:hover {
   background: transparent;
 }
 
@@ -101,6 +121,11 @@ input[type="range"].groover-range::-webkit-slider-thumb {
   transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+html.light input[type="range"].groover-range::-webkit-slider-thumb {
+  background: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.28);
+}
+
 input[type="range"].groover-range:hover::-webkit-slider-thumb,
 input[type="range"].groover-range:active::-webkit-slider-thumb {
   transform: scale(1.18);
@@ -113,6 +138,11 @@ input[type="range"].groover-range::-moz-range-thumb {
   background: #F3F4F6;
   border: 2px solid var(--accent-primary);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+html.light input[type="range"].groover-range::-moz-range-thumb {
+  background: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.28);
 }
 
 @media (prefers-reduced-motion: reduce) {

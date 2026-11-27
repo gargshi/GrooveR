@@ -87,8 +87,8 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
     return () => window.clearTimeout(t);
   }, []);
 
-  // Sync activeIdx -> slotIndex with shortest-path seamless wrap
-  useEffect(() => {
+  // Sync activeIdx -> slotIndex synchronously before paint with shortest-path seamless wrap
+  useLayoutEffect(() => {
     const prevIdx = prevActiveIdxRef.current;
     if (prevIdx === activeIdx) return;
     prevActiveIdxRef.current = activeIdx;
@@ -159,11 +159,13 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
     onSelectView(PIVOT_TABS[nextIdx].id);
   };
 
+  const disableHeaderMotion = isSwiping || skipTransition || skipHeaderSlide;
+
   return (
     <header className="space-y-2 pt-1 select-none">
       {/* Top Bar: MUSIC title + utility actions */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-bold tracking-[0.18em] uppercase text-white">
+        <span className="text-xs font-bold tracking-[0.18em] uppercase text-zinc-900 dark:text-white">
           MUSIC
         </span>
 
@@ -176,7 +178,9 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
             type="button"
             onClick={onToggleSearch}
             className={`min-h-[42px] min-w-[42px] flex items-center justify-center transition-colors ${
-              searchOpen || searchQuery ? 'text-[var(--accent-primary)]' : 'text-zinc-300 hover:text-white'
+              searchOpen || searchQuery
+                ? 'text-[var(--accent-primary)]'
+                : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white'
             }`}
             aria-label={searchOpen ? 'Close search' : 'Search library'}
           >
@@ -185,7 +189,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenEq}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-zinc-300 hover:text-white transition-colors lg:hidden"
+            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors lg:hidden"
             aria-label="Open equalizer"
           >
             <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
@@ -193,7 +197,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenSettings}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors"
             aria-label="Open settings"
           >
             <Settings className="w-4 h-4" />
@@ -201,7 +205,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
           <button
             type="button"
             onClick={onImportFiles}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-white hover:text-[var(--accent-primary)] transition-colors"
+            className="min-h-[42px] min-w-[42px] flex items-center justify-center text-zinc-900 dark:text-white hover:text-[var(--accent-primary)] transition-colors"
             aria-label="Add music files"
           >
             <Plus className="w-5 h-5" />
@@ -218,10 +222,9 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
           ref={trackRef}
           style={{
             transform: `translate3d(${currentTranslateX}px, 0, 0)`,
-            transition:
-              isSwiping || skipTransition
-                ? 'none'
-                : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: disableHeaderMotion
+              ? 'none'
+              : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
           className="flex items-baseline gap-6 sm:gap-8 w-max will-change-transform"
         >
@@ -257,10 +260,12 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
                 }}
                 style={{
                   opacity,
-                  transition: isSwiping || skipTransition ? 'none' : 'opacity 220ms ease',
+                  transition: disableHeaderMotion ? 'none' : 'opacity 220ms ease',
                 }}
                 className={`text-[2.45rem] sm:text-5xl font-light lowercase tracking-tight leading-none whitespace-nowrap shrink-0 focus-visible:outline-none ${
-                  isSlotActive ? 'text-white' : 'text-zinc-200 hover:text-white'
+                  isSlotActive
+                    ? 'text-zinc-900 dark:text-white'
+                    : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -274,14 +279,14 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
       {(searchOpen || searchQuery.length > 0) && (
         <div className="pt-1 pb-1">
           <div className="relative">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search albums, songs, artists..."
               autoFocus={searchOpen}
-              className="w-full min-h-[42px] pl-10 pr-4 bg-black border-2 border-white/25 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
+              className="w-full min-h-[42px] pl-10 pr-4 bg-white dark:bg-black border-2 border-zinc-300 dark:border-white/25 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
             />
           </div>
         </div>

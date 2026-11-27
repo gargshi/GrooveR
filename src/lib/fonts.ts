@@ -1,4 +1,4 @@
-import { ButtonColorScheme, FontOption, UiScaleOption } from '../types/music';
+import { ButtonColorScheme, ColorMode, FontOption, UiScaleOption } from '../types/music';
 
 export interface FontPreset {
   id: FontOption;
@@ -87,8 +87,10 @@ export interface ButtonColorPreset {
   primary: string;
   hover: string;
   soft: string;
+  softLight: string;
   contrast: string;
   tint: string;
+  tintLight: string;
   border: string;
   glow: string;
   dim: string;
@@ -101,8 +103,10 @@ export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
     primary: '#2E8BFF',
     hover: '#1E7AE8',
     soft: '#64AEFF',
+    softLight: '#1D4ED8',
     contrast: '#FFFFFF',
     tint: 'rgba(46, 139, 255, 0.16)',
+    tintLight: 'rgba(46, 139, 255, 0.12)',
     border: 'rgba(46, 139, 255, 0.44)',
     glow: 'rgba(46, 139, 255, 0.28)',
     dim: 'rgba(46, 139, 255, 0.55)',
@@ -113,8 +117,10 @@ export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
     primary: '#1BA1E2',
     hover: '#1489C4',
     soft: '#5CC4F5',
+    softLight: '#0369A1',
     contrast: '#FFFFFF',
     tint: 'rgba(27, 161, 226, 0.16)',
+    tintLight: 'rgba(27, 161, 226, 0.12)',
     border: 'rgba(27, 161, 226, 0.48)',
     glow: 'rgba(27, 161, 226, 0.28)',
     dim: 'rgba(27, 161, 226, 0.55)',
@@ -125,8 +131,10 @@ export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
     primary: '#059669',
     hover: '#047857',
     soft: '#34D399',
+    softLight: '#047857',
     contrast: '#FFFFFF',
     tint: 'rgba(5, 150, 105, 0.16)',
+    tintLight: 'rgba(5, 150, 105, 0.12)',
     border: 'rgba(5, 150, 105, 0.45)',
     glow: 'rgba(5, 150, 105, 0.28)',
     dim: 'rgba(5, 150, 105, 0.55)',
@@ -137,8 +145,10 @@ export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
     primary: '#E11D48',
     hover: '#BE123C',
     soft: '#FB7185',
+    softLight: '#BE123C',
     contrast: '#FFFFFF',
     tint: 'rgba(225, 29, 72, 0.16)',
+    tintLight: 'rgba(225, 29, 72, 0.11)',
     border: 'rgba(225, 29, 72, 0.45)',
     glow: 'rgba(225, 29, 72, 0.28)',
     dim: 'rgba(225, 29, 72, 0.55)',
@@ -149,8 +159,10 @@ export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
     primary: '#F59E0B',
     hover: '#D97706',
     soft: '#FBBF24',
+    softLight: '#B45309',
     contrast: '#090A0D',
     tint: 'rgba(245, 158, 11, 0.16)',
+    tintLight: 'rgba(245, 158, 11, 0.14)',
     border: 'rgba(245, 158, 11, 0.45)',
     glow: 'rgba(245, 158, 11, 0.28)',
     dim: 'rgba(245, 158, 11, 0.55)',
@@ -161,22 +173,34 @@ export const BUTTON_COLOR_PRESETS: ButtonColorPreset[] = [
     primary: '#EA580C',
     hover: '#C2410C',
     soft: '#FB923C',
+    softLight: '#C2410C',
     contrast: '#FFFFFF',
     tint: 'rgba(234, 88, 12, 0.16)',
+    tintLight: 'rgba(234, 88, 12, 0.12)',
     border: 'rgba(234, 88, 12, 0.45)',
     glow: 'rgba(234, 88, 12, 0.28)',
     dim: 'rgba(234, 88, 12, 0.55)',
   },
 ];
 
-export function applyButtonColorScheme(scheme: ButtonColorScheme): void {
+export function applyColorMode(mode: ColorMode): void {
+  const root = document.documentElement;
+  root.classList.toggle('dark', mode === 'dark');
+  root.classList.toggle('light', mode === 'light');
+  root.style.colorScheme = mode;
+}
+
+export function applyButtonColorScheme(
+  scheme: ButtonColorScheme,
+  colorMode: ColorMode = 'dark'
+): void {
   const preset = BUTTON_COLOR_PRESETS.find((p) => p.id === scheme) ?? BUTTON_COLOR_PRESETS[0];
   const rootStyle = document.documentElement.style;
   rootStyle.setProperty('--accent-primary', preset.primary);
   rootStyle.setProperty('--accent-hover', preset.hover);
-  rootStyle.setProperty('--accent-soft', preset.soft);
+  rootStyle.setProperty('--accent-soft', colorMode === 'light' ? preset.softLight : preset.soft);
   rootStyle.setProperty('--accent-contrast', preset.contrast);
-  rootStyle.setProperty('--accent-tint', preset.tint);
+  rootStyle.setProperty('--accent-tint', colorMode === 'light' ? preset.tintLight : preset.tint);
   rootStyle.setProperty('--accent-border', preset.border);
   rootStyle.setProperty('--accent-glow', preset.glow);
   rootStyle.setProperty('--accent-dim', preset.dim);
