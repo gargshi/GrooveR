@@ -34,7 +34,6 @@ import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fon
 import {
   formatBytes,
   formatDuration,
-  getAlbumArtistEntries,
   isLosslessFormat,
   splitArtists,
 } from '../lib/formatters';
@@ -143,6 +142,7 @@ interface LibraryViewsProps {
   activeTrackBitrateKbps?: number;
   onChangePlaybackRate: (rate: number) => void;
   onTogglePlay: () => void;
+  backHandlerRef?: React.MutableRefObject<(() => boolean) | null>;
 }
 
 export const LibraryViews: React.FC<LibraryViewsProps> = ({
@@ -194,6 +194,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   activeTrackBitrateKbps,
   onChangePlaybackRate,
   onTogglePlay,
+  backHandlerRef,
 }) => {
   const isPivot = uiTheme === 'pivot';
   const [searchQuery, setSearchQuery] = useState('');
@@ -354,47 +355,106 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   }, [tracks, searchQuery, songFilter, sortField, sortDir]);
 
   const albums = useMemo<AlbumSummary[]>(() => {
-    const map = new Map<string, AlbumSummary>();
+    const map = new Map<
+      string,
+      {
+        key: string;
+        album: string;
+        year: string;
+        coverArt?: string;
+        tracks: Track[];
+        totalDuration: number;
+        totalSize: number;
+        albumArtists: string[];
+        albumArtistKeys: Set<string>;
+        trackArtists: string[];
+        trackArtistKeys: Set<string>;
+      }
+    >();
     const q = searchQuery.trim().toLowerCase();
+
     for (const trk of tracks) {
-      const individualArtists = getAlbumArtistEntries(trk.albumArtist, trk.artist);
-      for (const individualArtist of individualArtists) {
-        const key = `${trk.album.trim().toLowerCase()}__${individualArtist.toLowerCase()}`;
-        const existing = map.get(key);
-        if (!existing) {
-          map.set(key, {
-            key,
-            album: trk.album,
-            albumArtist: individualArtist,
-            year: trk.year,
-            coverArt: trk.coverArt,
-            tracks: [trk],
-            totalDuration: trk.duration,
-            totalSize: trk.fileSize,
-          });
-        } else if (!existing.tracks.some((t) => t.id === trk.id)) {
-          existing.tracks.push(trk);
-          existing.totalDuration += trk.duration;
-          existing.totalSize += trk.fileSize;
-          if (!existing.coverArt && trk.coverArt) existing.coverArt = trk.coverArt;
+      const albumTitle = (trk.album || 'Local Collection').trim() || 'Local Collection';
+      const key = albumTitle.toLowerCase();
+      let entry = map.get(key);
+      if (!entry) {
+        entry = {
+          key,
+          album: albumTitle,
+          year: trk.year || '',
+          coverArt: trk.coverArt,
+          tracks: [],
+          totalDuration: 0,
+          totalSize: 0,
+          albumArtists: [],
+          albumArtistKeys: new Set<string>(),
+          trackArtists: [],
+          trackArtistKeys: new Set<string>(),
+        };
+        map.set(key, entry);
+      }
+
+      if (!entry.tracks.some((t) => t.id === trk.id)) {
+        entry.tracks.push(trk);
+        entry.totalDuration += trk.duration;
+        entry.totalSize += trk.fileSize;
+        if (!entry.coverArt && trk.coverArt) entry.coverArt = trk.coverArt;
+        if (!entry.year && trk.year) entry.year = trk.year;
+      }
+
+      for (const name of splitArtists(trk.albumArtist)) {
+        const lower = name.toLowerCase();
+        if (lower === 'various artists') continue;
+        if (!entry.albumArtistKeys.has(lower)) {
+          entry.albumArtistKeys.add(lower);
+          entry.albumArtists.push(name);
+        }
+      }
+
+      for (const name of splitArtists(trk.artist)) {
+        const lower = name.toLowerCase();
+        if (!entry.trackArtistKeys.has(lower)) {
+          entry.trackArtistKeys.add(lower);
+          entry.trackArtists.push(name);
         }
       }
     }
-    const list = Array.from(map.values()).map((a) => ({
-      ...a,
-      tracks: [...a.tracks].sort((x, y) => (x.trackNumber || 999) - (y.trackNumber || 999)),
-    }));
+
+    const list: AlbumSummary[] = Array.from(map.values()).map((entry) => {
+      let displayArtist = 'Unknown Artist';
+      if (entry.albumArtists.length > 0 && entry.albumArtists.length <= 3) {
+        displayArtist = entry.albumArtists.join(', ');
+      } else if (entry.trackArtists.length > 0 && entry.trackArtists.length <= 3) {
+        displayArtist = entry.trackArtists.join(', ');
+      } else if (entry.albumArtists.length > 3 || entry.trackArtists.length > 3) {
+        displayArtist = 'Various Artists';
+      }
+
+      return {
+        key: entry.key,
+        album: entry.album,
+        albumArtist: displayArtist,
+        year: entry.year,
+        coverArt: entry.coverArt,
+        tracks: [...entry.tracks].sort(
+          (x, y) =>
+            (x.trackNumber || 999) - (y.trackNumber || 999) ||
+            x.title.localeCompare(y.title)
+        ),
+        totalDuration: entry.totalDuration,
+        totalSize: entry.totalSize,
+      };
+    });
+
     return list
       .filter(
         (a) =>
           !q ||
           a.album.toLowerCase().includes(q) ||
-          a.albumArtist.toLowerCase().includes(q)
+          a.albumArtist.toLowerCase().includes(q) ||
+          a.tracks.some((t) => t.artist.toLowerCase().includes(q))
       )
-      .sort(
-        (a, b) =>
-          a.album.localeCompare(b.album) || a.albumArtist.localeCompare(b.albumArtist)
-      );
+      .sort((a, b) => a.album.localeCompare(b.album));
   }, [tracks, searchQuery]);
 
   const artists = useMemo<ArtistSummary[]>(() => {
@@ -448,6 +508,58 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   const activeAlbum = albums.find((a) => a.key === selectedAlbumKey) ?? null;
   const activeArtist = artists.find((a) => a.name === selectedArtistName) ?? null;
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId) ?? null;
+
+  useEffect(() => {
+    if (!backHandlerRef) return;
+    backHandlerRef.current = () => {
+      if (pivotJumpOpen !== null) {
+        setPivotJumpOpen(null);
+        return true;
+      }
+      if (pivotSearchOpen) {
+        setPivotSearchOpen(false);
+        setSearchQuery('');
+        return true;
+      }
+      if (activeView === 'albums' && activeAlbum) {
+        setSelectedAlbumKey(null);
+        return true;
+      }
+      if (activeView === 'artists' && activeArtist) {
+        setSelectedArtistName(null);
+        return true;
+      }
+      if (activeView === 'playlists' && activePlaylist) {
+        onSelectPlaylist(null);
+        return true;
+      }
+      if (activeView === 'playlists' && selectedSmartMix !== null) {
+        setSelectedSmartMix(null);
+        return true;
+      }
+      if (activeView === 'offline' && confirmClear) {
+        setConfirmClear(false);
+        return true;
+      }
+      return false;
+    };
+    return () => {
+      if (backHandlerRef) {
+        backHandlerRef.current = null;
+      }
+    };
+  }, [
+    backHandlerRef,
+    pivotJumpOpen,
+    pivotSearchOpen,
+    activeView,
+    activeAlbum,
+    activeArtist,
+    activePlaylist,
+    selectedSmartMix,
+    confirmClear,
+    onSelectPlaylist,
+  ]);
 
   const smartMixTracks = useMemo(() => {
     if (selectedSmartMix === 'favorites') {

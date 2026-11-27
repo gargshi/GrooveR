@@ -110,6 +110,9 @@ export default function App() {
   const [isDraggingFiles, setIsDraggingFiles] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const libraryBackHandlerRef = useRef<(() => boolean) | null>(null);
+  const handleHardwareBackRef = useRef<() => boolean>(() => false);
+
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
   }, []);
@@ -247,6 +250,85 @@ export default function App() {
       for (const ev of passiveEvents) {
         window.removeEventListener(ev, scheduleHide);
       }
+    };
+  }, []);
+
+  handleHardwareBackRef.current = () => {
+    if (editingTrack !== null) {
+      setEditingTrack(null);
+      return true;
+    }
+    if (smartPlaylistModalState.open) {
+      setSmartPlaylistModalState({ open: false, editingPlaylist: null });
+      return true;
+    }
+    if (playlistModalState.open) {
+      setPlaylistModalState({ open: false, mode: 'create' });
+      return true;
+    }
+    if (isEqOpen) {
+      setIsEqOpen(false);
+      return true;
+    }
+    if (isQueueOpen) {
+      setIsQueueOpen(false);
+      return true;
+    }
+    if (isSettingsOpen) {
+      setIsSettingsOpen(false);
+      return true;
+    }
+    if (isNowPlayingOpen) {
+      setIsNowPlayingOpen(false);
+      return true;
+    }
+    if (libraryBackHandlerRef.current?.()) {
+      return true;
+    }
+    return false;
+  };
+
+  // Native Android & browser Back button handling: close sub-screens/modals, do nothing on main pages
+  useEffect(() => {
+    const onNativeBack = () => {
+      handleHardwareBackRef.current();
+    };
+    window.addEventListener('grooverBackPressed', onNativeBack);
+
+    const isNativeCapacitor = Boolean(
+      (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()
+    );
+
+    if (isNativeCapacitor) {
+      return () => {
+        window.removeEventListener('grooverBackPressed', onNativeBack);
+      };
+    }
+
+    const ensureHistoryGuard = () => {
+      try {
+        if ((window.history.state as { grooverGuard?: boolean } | null)?.grooverGuard !== true) {
+          window.history.pushState({ grooverGuard: true }, '');
+        }
+      } catch {
+        // Ignore restricted history API contexts
+      }
+    };
+
+    const onPopState = () => {
+      handleHardwareBackRef.current();
+      ensureHistoryGuard();
+    };
+
+    window.addEventListener('popstate', onPopState);
+    window.addEventListener('pointerdown', ensureHistoryGuard, { passive: true });
+    window.addEventListener('keydown', ensureHistoryGuard, { passive: true });
+
+    return () => {
+      window.removeEventListener('grooverBackPressed', onNativeBack);
+      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('pointerdown', ensureHistoryGuard);
+      window.removeEventListener('keydown', ensureHistoryGuard);
     };
   }, []);
 
@@ -1195,6 +1277,7 @@ export default function App() {
                 syncMediaPosition();
               }}
               onTogglePlay={() => void handleTogglePlay()}
+              backHandlerRef={libraryBackHandlerRef}
             />
           )}
         </main>
