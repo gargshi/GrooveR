@@ -19,9 +19,12 @@ interface PivotHeaderProps {
   containerWidth: number;
   searchOpen: boolean;
   searchQuery: string;
+  isInDrilldown?: boolean;
+  skipHeaderSlide?: boolean;
   onToggleSearch: () => void;
   onSearchChange: (q: string) => void;
   onSelectView: (view: LibraryView) => void;
+  onResetDrilldown?: () => void;
   onOpenEq: () => void;
   onOpenSettings: () => void;
   onImportFiles: () => void;
@@ -37,9 +40,12 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
   containerWidth,
   searchOpen,
   searchQuery,
+  isInDrilldown = false,
+  skipHeaderSlide = false,
   onToggleSearch,
   onSearchChange,
   onSelectView,
+  onResetDrilldown,
   onOpenEq,
   onOpenSettings,
   onImportFiles,
@@ -56,6 +62,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
   const trackRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const prevActiveIdxRef = useRef(activeIdx);
+  const wheelCooldownRef = useRef(0);
 
   // Measure horizontal pixel offsets of every button in the tripled panoramic strip
   const measureOffsets = () => {
@@ -86,6 +93,21 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
     if (prevIdx === activeIdx) return;
     prevActiveIdxRef.current = activeIdx;
 
+    if (skipHeaderSlide) {
+      setSkipTransition(true);
+      setSlotIndex((curr) => {
+        const currMod = ((curr % TOTAL_TABS) + TOTAL_TABS) % TOTAL_TABS;
+        if (currMod === activeIdx) return curr;
+        const forwardDist = (activeIdx - currMod + TOTAL_TABS) % TOTAL_TABS;
+        const backwardDist = (currMod - activeIdx + TOTAL_TABS) % TOTAL_TABS;
+        return forwardDist <= backwardDist ? curr + forwardDist : curr - backwardDist;
+      });
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setSkipTransition(false));
+      });
+      return;
+    }
+
     setSkipTransition(false);
     setSlotIndex((curr) => {
       const currMod = ((curr % TOTAL_TABS) + TOTAL_TABS) % TOTAL_TABS;
@@ -97,7 +119,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
       }
       return curr - backwardDist;
     });
-  }, [activeIdx]);
+  }, [activeIdx, skipHeaderSlide]);
 
   // Silently re-center slotIndex into the middle cycle [5..9] after wrap animation completes
   useEffect(() => {
@@ -124,6 +146,18 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
   const toX = offsets[incomingSlot] ?? fromX;
   const t = Math.abs(progress);
   const currentTranslateX = -(fromX + (toX - fromX) * t);
+
+  const handleHeaderWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const dominantX = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+    if (Math.abs(dominantX) < 18) return;
+    const now = performance.now();
+    if (now - wheelCooldownRef.current < 260) return;
+    wheelCooldownRef.current = now;
+    const step = dominantX > 0 ? 1 : -1;
+    const nextIdx = (activeIdx + step + TOTAL_TABS) % TOTAL_TABS;
+    onResetDrilldown?.();
+    onSelectView(PIVOT_TABS[nextIdx].id);
+  };
 
   return (
     <header className="space-y-2 pt-1 select-none">
@@ -176,7 +210,10 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
       </div>
 
       {/* Panoramic Lowercase Pivot Header Strip */}
-      <div className="relative overflow-hidden py-1 -mx-1 px-1">
+      <div
+        onWheel={handleHeaderWheel}
+        className="relative overflow-hidden py-1 -mx-1 px-1 touch-pan-y cursor-grab active:cursor-grabbing"
+      >
         <div
           ref={trackRef}
           style={{
@@ -190,10 +227,10 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
         >
           {TRIPLED_TABS.map((tab, idx) => {
             const isSlotActive = idx === slotIndex;
-            const isIncoming = isSwiping && t > 0 && idx === incomingSlot;
+            const isIncoming = (isSwiping || t > 0) && t > 0 && idx === incomingSlot;
             let opacity = 0.36;
             if (isSlotActive) {
-              opacity = isSwiping ? 1 - 0.64 * t : 1;
+              opacity = t > 0 ? 1 - 0.64 * t : 1;
             } else if (isIncoming) {
               opacity = 0.36 + 0.64 * t;
             }
@@ -206,15 +243,21 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
                 }}
                 type="button"
                 onClick={() => {
-                  if (idx === slotIndex) return;
+                  if (idx === slotIndex) {
+                    if (isInDrilldown) {
+                      onResetDrilldown?.();
+                    }
+                    return;
+                  }
                   setSkipTransition(false);
                   setSlotIndex(idx);
                   prevActiveIdxRef.current = idx % TOTAL_TABS;
+                  onResetDrilldown?.();
                   onSelectView(tab.id);
                 }}
                 style={{
                   opacity,
-                  transition: isSwiping ? 'none' : 'opacity 220ms ease',
+                  transition: isSwiping || skipTransition ? 'none' : 'opacity 220ms ease',
                 }}
                 className={`text-[2.45rem] sm:text-5xl font-light lowercase tracking-tight leading-none whitespace-nowrap shrink-0 focus-visible:outline-none ${
                   isSlotActive ? 'text-white' : 'text-zinc-200 hover:text-white'

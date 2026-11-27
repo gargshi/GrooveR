@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -201,11 +201,22 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   // Metro Pivot horizontal swipe & quick-jump state
   const [pivotSwipeX, setPivotSwipeX] = useState(0);
   const [isPivotSwiping, setIsPivotSwiping] = useState(false);
+  const [pivotSettlingSide, setPivotSettlingSide] = useState<'prev' | 'next' | null>(null);
+  const [pivotCommitState, setPivotCommitState] = useState<{
+    direction: 1 | -1;
+    targetView: LibraryView;
+  } | null>(null);
+  const [skipHeaderSlide, setSkipHeaderSlide] = useState(false);
   const [pivotContainerWidth, setPivotContainerWidth] = useState(390);
   const [pivotSearchOpen, setPivotSearchOpen] = useState(false);
   const [pivotJumpOpen, setPivotJumpOpen] = useState<'albums' | 'songs' | 'artists' | null>(null);
   const pivotSectionRef = useRef<HTMLDivElement | null>(null);
+  const pivotActivePaneRef = useRef<HTMLDivElement | null>(null);
   const pivotSuppressClickRef = useRef(false);
+  const pivotCommitTimerRef = useRef<number | null>(null);
+  const pivotSettleTimerRef = useRef<number | null>(null);
+  const commitJustCompletedRef = useRef(false);
+  const prevPivotViewRef = useRef<LibraryView>(activeView);
   const pivotDragRef = useRef<{
     pointerId: number;
     startX: number;
@@ -213,6 +224,15 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
     startTime: number;
     locked: 'none' | 'horizontal' | 'vertical';
   } | null>(null);
+
+  const resetDrilldowns = useCallback(() => {
+    setSelectedAlbumKey(null);
+    setSelectedArtistName(null);
+    setSelectedSmartMix(null);
+    if (activePlaylistId !== null) {
+      onSelectPlaylist(null);
+    }
+  }, [activePlaylistId, onSelectPlaylist]);
 
   useEffect(() => {
     if (!isPivot || !pivotSectionRef.current || typeof ResizeObserver === 'undefined') return;
@@ -226,12 +246,77 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
     return () => ro.disconnect();
   }, [isPivot]);
 
-  // Reset sub-drilldowns when switching top-level views
+  // Cleanup pending swipe timers on unmount
   useEffect(() => {
+    return () => {
+      if (pivotCommitTimerRef.current !== null) {
+        window.clearTimeout(pivotCommitTimerRef.current);
+      }
+      if (pivotSettleTimerRef.current !== null) {
+        window.clearTimeout(pivotSettleTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Reset jump overlay & transient swipe state when switching views or theme
+  useEffect(() => {
+    if (pivotCommitTimerRef.current !== null) {
+      window.clearTimeout(pivotCommitTimerRef.current);
+      pivotCommitTimerRef.current = null;
+    }
+    if (pivotSettleTimerRef.current !== null) {
+      window.clearTimeout(pivotSettleTimerRef.current);
+      pivotSettleTimerRef.current = null;
+    }
+    setPivotCommitState(null);
+    setPivotSettlingSide(null);
     setPivotSwipeX(0);
     setIsPivotSwiping(false);
     setPivotJumpOpen(null);
   }, [activeView, uiTheme]);
+
+  // Smooth slide-in animation when switching Metro Pivot tabs via header tap, wheel, or nav bar
+  useLayoutEffect(() => {
+    const prevView = prevPivotViewRef.current;
+    prevPivotViewRef.current = activeView;
+
+    if (!isPivot || prevView === activeView) return;
+    if (commitJustCompletedRef.current) {
+      commitJustCompletedRef.current = false;
+      return;
+    }
+
+    const pane = pivotActivePaneRef.current;
+    if (!pane) return;
+
+    const prevIdx = Math.max(0, PIVOT_TABS.findIndex((t) => t.id === prevView));
+    const nextIdx = Math.max(0, PIVOT_TABS.findIndex((t) => t.id === activeView));
+    const total = PIVOT_TABS.length;
+    const forwardDist = (nextIdx - prevIdx + total) % total;
+    const backwardDist = (prevIdx - nextIdx + total) % total;
+    const enterSign = forwardDist <= backwardDist ? 1 : -1;
+    const distance = Math.min(180, Math.max(90, pivotContainerWidth * 0.42));
+
+    pane.style.transition = 'none';
+    pane.style.transform = `translate3d(${enterSign * distance}px, 0, 0)`;
+    pane.style.opacity = '0.28';
+
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        if (!pivotActivePaneRef.current) return;
+        pivotActivePaneRef.current.style.transition =
+          'transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease';
+        pivotActivePaneRef.current.style.transform = 'translate3d(0, 0, 0)';
+        pivotActivePaneRef.current.style.opacity = '1';
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      if (raf2) window.cancelAnimationFrame(raf2);
+    };
+  }, [activeView, isPivot, pivotContainerWidth]);
 
   const filteredSongs = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -411,7 +496,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
 
   const handlePivotPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!isPivot || isInDrilldown || pivotJumpOpen) return;
+      if (!isPivot || pivotJumpOpen || Boolean(pivotCommitState)) return;
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       const target = e.target as HTMLElement | null;
       if (
@@ -421,6 +506,11 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       ) {
         return;
       }
+      if (pivotSettleTimerRef.current !== null) {
+        window.clearTimeout(pivotSettleTimerRef.current);
+        pivotSettleTimerRef.current = null;
+        setPivotSettlingSide(null);
+      }
       pivotDragRef.current = {
         pointerId: e.pointerId,
         startX: e.clientX,
@@ -429,7 +519,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
         locked: 'none',
       };
     },
-    [isPivot, isInDrilldown, pivotJumpOpen]
+    [isPivot, pivotJumpOpen, pivotCommitState]
   );
 
   const handlePivotPointerMove = useCallback(
@@ -443,56 +533,130 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       const absY = Math.abs(deltaY);
 
       if (drag.locked === 'none') {
-        if (absX < 12 && absY < 12) return;
+        if (absX < 10 && absY < 10) return;
         if (absY > absX * 1.1) {
           drag.locked = 'vertical';
           return;
         }
         drag.locked = 'horizontal';
         setIsPivotSwiping(true);
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          // Ignore if capture is unsupported
+        }
       }
 
       if (drag.locked === 'horizontal') {
-        const maxOffset = Math.max(220, pivotContainerWidth * 0.78);
+        const maxOffset = Math.max(240, pivotContainerWidth);
         setPivotSwipeX(Math.max(-maxOffset, Math.min(maxOffset, deltaX)));
       }
     },
     [pivotContainerWidth]
   );
 
-  const finishPivotSwipe = useCallback(
+  const cancelPivotSwipe = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const drag = pivotDragRef.current;
       if (!drag || drag.pointerId !== e.pointerId) return;
-
-      const deltaX = e.clientX - drag.startX;
-      const dt = Math.max(16, performance.now() - drag.startTime);
-      const velocityX = deltaX / dt;
-
-      if (drag.locked === 'horizontal') {
-        pivotSuppressClickRef.current = true;
-        window.setTimeout(() => {
-          pivotSuppressClickRef.current = false;
-        }, 140);
-
-        const threshold = Math.min(82, Math.max(52, pivotContainerWidth * 0.2));
-        if (Math.abs(deltaX) > threshold || Math.abs(velocityX) > 0.36) {
-          const currentPivotIdx = Math.max(
-            0,
-            PIVOT_TABS.findIndex((t) => t.id === activeView)
-          );
-          const step = deltaX < 0 ? 1 : -1;
-          const nextIdx =
-            (currentPivotIdx + step + PIVOT_TABS.length) % PIVOT_TABS.length;
-          onSelectView(PIVOT_TABS[nextIdx].id);
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
         }
+      } catch {
+        // Ignore
       }
-
+      if (drag.locked === 'horizontal' && pivotSwipeX !== 0) {
+        setPivotSettlingSide(pivotSwipeX < 0 ? 'next' : 'prev');
+        pivotSettleTimerRef.current = window.setTimeout(() => {
+          setPivotSettlingSide(null);
+          pivotSettleTimerRef.current = null;
+        }, 265);
+      }
       pivotDragRef.current = null;
       setPivotSwipeX(0);
       setIsPivotSwiping(false);
     },
-    [activeView, onSelectView, pivotContainerWidth]
+    [pivotSwipeX]
+  );
+
+  const finishPivotSwipe = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const drag = pivotDragRef.current;
+      if (!drag || drag.pointerId !== e.pointerId) return;
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore
+      }
+
+      const deltaX = e.clientX - drag.startX;
+      const dt = Math.max(16, performance.now() - drag.startTime);
+      const velocityX = deltaX / dt;
+      pivotDragRef.current = null;
+
+      if (drag.locked !== 'horizontal') {
+        setPivotSwipeX(0);
+        setIsPivotSwiping(false);
+        return;
+      }
+
+      pivotSuppressClickRef.current = true;
+      window.setTimeout(() => {
+        pivotSuppressClickRef.current = false;
+      }, 150);
+
+      const threshold = Math.min(82, Math.max(48, pivotContainerWidth * 0.18));
+      const shouldCommit =
+        Math.abs(deltaX) > threshold || Math.abs(velocityX) > 0.34;
+
+      if (shouldCommit && deltaX !== 0) {
+        const currentPivotIdx = Math.max(
+          0,
+          PIVOT_TABS.findIndex((t) => t.id === activeView)
+        );
+        const step: 1 | -1 = deltaX < 0 ? 1 : -1;
+        const nextIdx =
+          (currentPivotIdx + step + PIVOT_TABS.length) % PIVOT_TABS.length;
+        const targetView = PIVOT_TABS[nextIdx].id;
+        const settleSide: 'next' | 'prev' = step === 1 ? 'next' : 'prev';
+        const slideTargetX = step === 1 ? -pivotContainerWidth : pivotContainerWidth;
+
+        setPivotCommitState({ direction: step, targetView });
+        setPivotSettlingSide(settleSide);
+        setIsPivotSwiping(false);
+        setPivotSwipeX(slideTargetX);
+
+        pivotCommitTimerRef.current = window.setTimeout(() => {
+          pivotCommitTimerRef.current = null;
+          commitJustCompletedRef.current = true;
+          setSkipHeaderSlide(true);
+          setPivotCommitState(null);
+          setPivotSettlingSide(null);
+          setPivotSwipeX(0);
+          resetDrilldowns();
+          onSelectView(targetView);
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => setSkipHeaderSlide(false));
+          });
+        }, 265);
+        return;
+      }
+
+      // Snap back smoothly to resting center
+      if (deltaX !== 0) {
+        setPivotSettlingSide(deltaX < 0 ? 'next' : 'prev');
+        pivotSettleTimerRef.current = window.setTimeout(() => {
+          setPivotSettlingSide(null);
+          pivotSettleTimerRef.current = null;
+        }, 265);
+      }
+      setPivotSwipeX(0);
+      setIsPivotSwiping(false);
+    },
+    [activeView, onSelectView, pivotContainerWidth, resetDrilldowns]
   );
 
   const handleJumpToLetter = useCallback(
@@ -516,8 +680,14 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
         onPointerDown={handlePivotPointerDown}
         onPointerMove={handlePivotPointerMove}
         onPointerUp={finishPivotSwipe}
-        onPointerCancel={finishPivotSwipe}
-        className={`px-4 sm:px-8 py-5 max-w-5xl mx-auto space-y-6 ${
+        onPointerCancel={cancelPivotSwipe}
+        onClickCapture={(e) => {
+          if (pivotSuppressClickRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+        className={`px-4 sm:px-8 py-5 max-w-5xl mx-auto space-y-6 overflow-x-clip ${
           isPivot ? 'touch-pan-y select-none' : ''
         }`}
       >
@@ -529,12 +699,15 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             containerWidth={pivotContainerWidth}
             searchOpen={pivotSearchOpen}
             searchQuery={searchQuery}
+            isInDrilldown={isInDrilldown}
+            skipHeaderSlide={skipHeaderSlide}
             onToggleSearch={() => setPivotSearchOpen((v) => !v)}
             onSearchChange={setSearchQuery}
             onSelectView={(v) => {
+              resetDrilldowns();
               onSelectView(v);
-              if (v !== 'playlists') onSelectPlaylist(null);
             }}
+            onResetDrilldown={resetDrilldowns}
             onOpenEq={onOpenEq}
             onOpenSettings={onOpenSettings}
             onImportFiles={onImportFiles}
@@ -623,125 +796,35 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
     );
   }
 
-  return (
-    <div
-      ref={pivotSectionRef}
-      onPointerDown={handlePivotPointerDown}
-      onPointerMove={handlePivotPointerMove}
-      onPointerUp={finishPivotSwipe}
-      onPointerCancel={finishPivotSwipe}
-      onClickCapture={(e) => {
-        if (pivotSuppressClickRef.current) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      className={`px-4 sm:px-8 py-5 sm:py-7 max-w-7xl mx-auto space-y-5 ${
-        isPivot ? 'touch-pan-y select-none' : ''
-      }`}
-    >
-      {isPivot ? (
-        <PivotHeader
-          activeView={activeView}
-          swipeOffsetX={pivotSwipeX}
-          isSwiping={isPivotSwiping}
-          containerWidth={pivotContainerWidth}
-          searchOpen={pivotSearchOpen}
-          searchQuery={searchQuery}
-          onToggleSearch={() => setPivotSearchOpen((v) => !v)}
-          onSearchChange={setSearchQuery}
-          onSelectView={(v) => {
-            onSelectView(v);
-            if (v !== 'playlists') onSelectPlaylist(null);
-          }}
-          onOpenEq={onOpenEq}
-          onOpenSettings={onOpenSettings}
-          onImportFiles={onImportFiles}
-        />
-      ) : (
-        <>
-          {/* Mobile Compact Header */}
-          <div className="flex items-center justify-between gap-3 lg:hidden">
-            <span className="font-display text-xl font-bold text-white">GrooveR</span>
-            <div className="flex items-center gap-1.5">
-              <OfflineIndicator />
-              <PWAInstallButton compact />
-              <button
-                type="button"
-                onClick={onOpenEq}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
-                aria-label="Open equalizer"
-              >
-                <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
-              </button>
-              <button
-                type="button"
-                onClick={onOpenSettings}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
-                aria-label="Open settings"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onImportFiles}
-                className="min-h-[44px] px-3.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add</span>
-              </button>
-            </div>
-          </div>
+  const activePivotIdx = Math.max(
+    0,
+    PIVOT_TABS.findIndex((t) => t.id === activeView)
+  );
+  const previewSide: 'prev' | 'next' | null =
+    pivotSwipeX < 0
+      ? 'next'
+      : pivotSwipeX > 0
+      ? 'prev'
+      : pivotSettlingSide;
+  const previewViewId: LibraryView | null = !isPivot
+    ? null
+    : pivotCommitState?.targetView ??
+      (previewSide === 'next'
+        ? PIVOT_TABS[(activePivotIdx + 1) % PIVOT_TABS.length].id
+        : previewSide === 'prev'
+        ? PIVOT_TABS[(activePivotIdx - 1 + PIVOT_TABS.length) % PIVOT_TABS.length].id
+        : null);
+  const previewOffsetX =
+    previewSide === 'next'
+      ? pivotSwipeX + pivotContainerWidth
+      : previewSide === 'prev'
+      ? pivotSwipeX - pivotContainerWidth
+      : 0;
 
-          {/* Desktop Top Context Strip */}
-          <div className="hidden lg:flex items-center justify-between gap-6">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search songs, albums, artists, or genres"
-                className="w-full min-h-[42px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              {isImporting && importProgressText && (
-                <span className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</span>
-              )}
-              <OfflineIndicator />
-            </div>
-          </div>
-
-          {/* Mobile Search Bar */}
-          {activeView !== 'offline' && (
-            <div className="relative lg:hidden">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search offline library"
-                className="w-full min-h-[44px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
-              />
-            </div>
-          )}
-        </>
-      )}
-
-      {isPivot && isImporting && importProgressText && (
-        <p className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</p>
-      )}
-
-      <div
-        style={{
-          transform: isPivot && !isInDrilldown ? `translate3d(${pivotSwipeX * 0.32}px, 0, 0)` : undefined,
-          transition: isPivotSwiping ? 'none' : 'transform 240ms cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-        className="will-change-transform"
-      >
+  const renderTabView = (view: LibraryView, isPreview = false) => (
+    <>
       {/* SONGS VIEW */}
-      {activeView === 'songs' && (
+      {view === 'songs' && (
         <section className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -939,7 +1022,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
               {pivotSongGroups.map((group) => (
                 <div
                   key={group.letter}
-                  id={`pivot-group-songs-${group.letter}`}
+                  id={isPreview ? undefined : `pivot-group-songs-${group.letter}`}
                   className="space-y-1.5 scroll-mt-4"
                 >
                   <button
@@ -1022,9 +1105,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       )}
 
       {/* ALBUMS VIEW */}
-      {activeView === 'albums' && (
+      {view === 'albums' && (
         <section className="space-y-5">
-          {activeAlbum ? (
+          {!isPreview && activeAlbum ? (
             <div className="space-y-5">
               <button
                 type="button"
@@ -1126,7 +1209,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 {pivotAlbumGroups.map((group) => (
                   <div
                     key={group.letter}
-                    id={`pivot-group-albums-${group.letter}`}
+                    id={isPreview ? undefined : `pivot-group-albums-${group.letter}`}
                     className="space-y-2.5 scroll-mt-4"
                   >
                     <button
@@ -1222,9 +1305,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       )}
 
       {/* ARTISTS VIEW */}
-      {activeView === 'artists' && (
+      {view === 'artists' && (
         <section className="space-y-5">
-          {activeArtist ? (
+          {!isPreview && activeArtist ? (
             <div className="space-y-5">
               <button
                 type="button"
@@ -1310,7 +1393,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 {pivotArtistGroups.map((group) => (
                   <div
                     key={group.letter}
-                    id={`pivot-group-artists-${group.letter}`}
+                    id={isPreview ? undefined : `pivot-group-artists-${group.letter}`}
                     className="space-y-2.5 scroll-mt-4"
                   >
                     <button
@@ -1407,9 +1490,9 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       )}
 
       {/* PLAYLISTS VIEW */}
-      {activeView === 'playlists' && (
+      {view === 'playlists' && (
         <section className="space-y-6">
-          {activePlaylist ? (
+          {!isPreview && activePlaylist ? (
             (() => {
               const plTracks = resolvePlaylistTracks(activePlaylist, tracks);
               const smartSummary =
@@ -1572,7 +1655,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 </div>
               );
             })()
-          ) : selectedSmartMix ? (
+          ) : !isPreview && selectedSmartMix ? (
             <div className="space-y-5">
               <button
                 type="button"
@@ -1824,7 +1907,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       )}
 
       {/* OFFLINE VAULT VIEW */}
-      {activeView === 'offline' && (
+      {view === 'offline' && (
         <section className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -2297,6 +2380,150 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
           )}
         </section>
       )}
+    </>
+  );
+
+  return (
+    <div
+      ref={pivotSectionRef}
+      onPointerDown={handlePivotPointerDown}
+      onPointerMove={handlePivotPointerMove}
+      onPointerUp={finishPivotSwipe}
+      onPointerCancel={cancelPivotSwipe}
+      onClickCapture={(e) => {
+        if (pivotSuppressClickRef.current) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+      className={`px-4 sm:px-8 py-5 sm:py-7 max-w-7xl mx-auto space-y-5 ${
+        isPivot ? 'touch-pan-y select-none' : ''
+      }`}
+    >
+      {isPivot ? (
+        <PivotHeader
+          activeView={activeView}
+          swipeOffsetX={pivotSwipeX}
+          isSwiping={isPivotSwiping}
+          containerWidth={pivotContainerWidth}
+          searchOpen={pivotSearchOpen}
+          searchQuery={searchQuery}
+          isInDrilldown={isInDrilldown}
+          skipHeaderSlide={skipHeaderSlide}
+          onToggleSearch={() => setPivotSearchOpen((v) => !v)}
+          onSearchChange={setSearchQuery}
+          onSelectView={(v) => {
+            resetDrilldowns();
+            onSelectView(v);
+          }}
+          onResetDrilldown={resetDrilldowns}
+          onOpenEq={onOpenEq}
+          onOpenSettings={onOpenSettings}
+          onImportFiles={onImportFiles}
+        />
+      ) : (
+        <>
+          {/* Mobile Compact Header */}
+          <div className="flex items-center justify-between gap-3 lg:hidden">
+            <span className="font-display text-xl font-bold text-white">GrooveR</span>
+            <div className="flex items-center gap-1.5">
+              <OfflineIndicator />
+              <PWAInstallButton compact />
+              <button
+                type="button"
+                onClick={onOpenEq}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
+                aria-label="Open equalizer"
+              >
+                <SlidersHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
+              </button>
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] text-zinc-200 hover:text-white"
+                aria-label="Open settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onImportFiles}
+                className="min-h-[44px] px-3.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Top Context Strip */}
+          <div className="hidden lg:flex items-center justify-between gap-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search songs, albums, artists, or genres"
+                className="w-full min-h-[42px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              {isImporting && importProgressText && (
+                <span className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</span>
+              )}
+              <OfflineIndicator />
+            </div>
+          </div>
+
+          {/* Mobile Search Bar */}
+          {activeView !== 'offline' && (
+            <div className="relative lg:hidden">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search offline library"
+                className="w-full min-h-[44px] pl-10 pr-4 rounded-xl bg-[#111318] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--accent-primary)]"
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {isPivot && isImporting && importProgressText && (
+        <p className="text-xs font-mono-nums text-[var(--accent-soft)]">{importProgressText}</p>
+      )}
+
+      <div className={isPivot ? 'relative overflow-x-clip' : undefined}>
+        <div
+          ref={pivotActivePaneRef}
+          style={{
+            transform: isPivot ? `translate3d(${pivotSwipeX}px, 0, 0)` : undefined,
+            transition: isPivotSwiping
+              ? 'none'
+              : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          className="will-change-transform"
+        >
+          {renderTabView(activeView, false)}
+        </div>
+
+        {isPivot && previewViewId && (
+          <div
+            aria-hidden="true"
+            style={{
+              transform: `translate3d(${previewOffsetX}px, 0, 0)`,
+              transition: isPivotSwiping
+                ? 'none'
+                : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            className="absolute inset-x-0 top-0 pointer-events-none select-none will-change-transform"
+          >
+            {renderTabView(previewViewId, true)}
+          </div>
+        )}
       </div>
 
       {/* Metro Pivot A–Z Quick-Jump Overlay */}
