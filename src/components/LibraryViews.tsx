@@ -34,6 +34,7 @@ import {
   formatDuration,
   getAlbumArtistEntries,
   isLosslessFormat,
+  splitArtists,
 } from '../lib/formatters';
 import { describeSmartRules, resolvePlaylistTracks } from '../lib/smartPlaylists';
 import {
@@ -308,21 +309,25 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
     const map = new Map<string, { name: string; tracks: Track[]; albums: Set<string>; coverArt?: string; totalDuration: number }>();
     const q = searchQuery.trim().toLowerCase();
     for (const trk of tracks) {
-      const name = trk.artist || 'Unknown Artist';
-      const existing = map.get(name);
-      if (!existing) {
-        map.set(name, {
-          name,
-          tracks: [trk],
-          albums: new Set([trk.album]),
-          coverArt: trk.coverArt,
-          totalDuration: trk.duration,
-        });
-      } else {
-        existing.tracks.push(trk);
-        existing.albums.add(trk.album);
-        existing.totalDuration += trk.duration;
-        if (!existing.coverArt && trk.coverArt) existing.coverArt = trk.coverArt;
+      const parsed = splitArtists(trk.artist);
+      const individualArtists = parsed.length > 0 ? parsed : ['Unknown Artist'];
+      for (const name of individualArtists) {
+        const key = name.toLowerCase();
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, {
+            name,
+            tracks: [trk],
+            albums: new Set([trk.album]),
+            coverArt: trk.coverArt,
+            totalDuration: trk.duration,
+          });
+        } else if (!existing.tracks.some((t) => t.id === trk.id)) {
+          existing.tracks.push(trk);
+          existing.albums.add(trk.album);
+          existing.totalDuration += trk.duration;
+          if (!existing.coverArt && trk.coverArt) existing.coverArt = trk.coverArt;
+        }
       }
     }
     return Array.from(map.values())
@@ -1349,7 +1354,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                                 {art.name}
                               </p>
                               <p className="text-sm text-zinc-400 font-mono-nums truncate mt-0.5">
-                                {art.tracks.length} songs · {art.albumCount}{' '}
+                                {art.tracks.length} {art.tracks.length === 1 ? 'song' : 'songs'} · {art.albumCount}{' '}
                                 {art.albumCount === 1 ? 'album' : 'albums'}
                               </p>
                             </div>
@@ -1389,7 +1394,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-white truncate">{art.name}</p>
                       <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
-                        {art.tracks.length} tracks · {art.albumCount}{' '}
+                        {art.tracks.length} {art.tracks.length === 1 ? 'track' : 'tracks'} · {art.albumCount}{' '}
                         {art.albumCount === 1 ? 'album' : 'albums'}
                       </p>
                     </div>

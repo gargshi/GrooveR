@@ -40,11 +40,20 @@ export function isLosslessFormat(format: string): boolean {
 }
 
 const ARTIST_SPLIT_REGEX =
-  /\s*(?:;|、|＆|\s+&\s+|\s+\/\s+|\s+\+\s+|,\s*(?!(?:Jr\.?|Sr\.?|II|III|Inc\.?|The)\b))\s*/i;
+  /\s*(?:;|、|＆|\/|\s+&\s+|\s+\+\s+|,\s*(?!(?:Jr\.?|Sr\.?|II|III|Inc\.?|The)\b))\s*/i;
+
+const PROTECTED_SLASH_ARTISTS: Array<{ pattern: RegExp; placeholder: string; value: string }> = [
+  { pattern: /\bAC\s*\/\s*DC\b/gi, placeholder: '__PROTECTED_ACDC__', value: 'AC/DC' },
+  { pattern: /\bK\s*\/\s*DA\b/gi, placeholder: '__PROTECTED_KDA__', value: 'K/DA' },
+];
 
 export function splitArtists(raw?: string): string[] {
   if (!raw || !raw.trim()) return [];
-  let normalized = raw.replace(
+  let normalized = raw;
+  for (const item of PROTECTED_SLASH_ARTISTS) {
+    normalized = normalized.replace(item.pattern, item.placeholder);
+  }
+  normalized = normalized.replace(
     /[\(\[]\s*(?:feat\.?|ft\.?|featuring|with)\s+([^\)\]]+)[\)\]]/gi,
     ' ; $1 '
   );
@@ -58,7 +67,14 @@ export function splitArtists(raw?: string): string[] {
   const result: string[] = [];
 
   for (const part of parts) {
-    const cleaned = part.replace(/^[\s,;(\[]+|[\s,;)\]]+$/g, '').trim();
+    let restored = part;
+    for (const item of PROTECTED_SLASH_ARTISTS) {
+      restored = restored.replace(new RegExp(item.placeholder, 'g'), item.value);
+    }
+    const cleaned = restored
+      .replace(/^[\s,;(\[]+|[\s,;)\]]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     if (!cleaned) continue;
     const key = cleaned.toLowerCase();
     if (!seen.has(key)) {

@@ -30,7 +30,7 @@ function pickAccentForTitle(seed: string): string {
   return ACCENT_PALETTE[Math.abs(hash) % ACCENT_PALETTE.length];
 }
 
-function decodeText(bytes: Uint8Array, encodingByte?: number): string {
+function decodeText(bytes: Uint8Array, encodingByte?: number, joinNulls = false): string {
   if (bytes.length === 0) return '';
   let encoding = 'utf-8';
   let slice = bytes;
@@ -56,10 +56,11 @@ function decodeText(bytes: Uint8Array, encodingByte?: number): string {
   }
 
   try {
-    const text = new TextDecoder(encoding).decode(slice);
-    return text.replace(/\0+$/g, '').replace(/\0/g, ' ').trim();
+    const text = new TextDecoder(encoding).decode(slice).replace(/\0+$/g, '');
+    return (joinNulls ? text.replace(/\0+/g, ' / ') : text.replace(/\0/g, ' ')).trim();
   } catch {
-    return new TextDecoder('utf-8', { fatal: false }).decode(slice).replace(/\0/g, '').trim();
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(slice).replace(/\0+$/g, '');
+    return (joinNulls ? text.replace(/\0+/g, ' / ') : text.replace(/\0/g, ' ')).trim();
   }
 }
 
@@ -140,7 +141,8 @@ function parseID3v2(buffer: ArrayBuffer): ParsedTags {
       pos += 6;
       if (frameSize <= 0 || pos + frameSize > limit) break;
       const payload = bytes.subarray(pos, pos + frameSize);
-      const val = decodeText(payload.subarray(1), payload[0]);
+      const joinMulti = frameId === 'TP1' || frameId === 'TP2' || frameId === 'TCO';
+      const val = decodeText(payload.subarray(1), payload[0], joinMulti);
       if (frameId === 'TT2' && val) tags.title = val;
       if (frameId === 'TP1' && val) tags.artist = val;
       if (frameId === 'TAL' && val) tags.album = val;
@@ -161,7 +163,8 @@ function parseID3v2(buffer: ArrayBuffer): ParsedTags {
     const payload = bytes.subarray(pos, pos + frameSize);
 
     if (frameId.startsWith('T') && frameId !== 'TXXX' && payload.length > 1) {
-      const val = decodeText(payload.subarray(1), payload[0]);
+      const joinMulti = frameId === 'TPE1' || frameId === 'TPE2' || frameId === 'TCON';
+      const val = decodeText(payload.subarray(1), payload[0], joinMulti);
       if (frameId === 'TIT2' && val) tags.title = val;
       else if (frameId === 'TPE1' && val) tags.artist = val;
       else if (frameId === 'TALB' && val) tags.album = val;
