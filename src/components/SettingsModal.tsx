@@ -7,6 +7,7 @@ import {
   List,
   Maximize2,
   Moon,
+  MoveHorizontal,
   Palette,
   RotateCcw,
   SlidersHorizontal,
@@ -15,12 +16,18 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
+import {
+  BUTTON_COLOR_PRESETS,
+  FONT_PRESETS,
+  SWIPE_SPEED_PRESETS,
+  UI_SCALE_PRESETS,
+} from '../lib/fonts';
 import {
   ButtonColorScheme,
   ColorMode,
   FontOption,
   SongsDisplayMode,
+  SwipeSpeedOption,
   UiScaleOption,
   UiTheme,
 } from '../types/music';
@@ -34,6 +41,7 @@ interface SettingsModalProps {
   uiTheme: UiTheme;
   colorMode: ColorMode;
   buttonColorScheme: ButtonColorScheme;
+  swipeSpeed: SwipeSpeedOption;
   playbackRate: number;
   activeTrackBitrateKbps?: number;
   onSelectFont: (font: FontOption) => void;
@@ -43,6 +51,7 @@ interface SettingsModalProps {
   onSelectUiTheme: (theme: UiTheme) => void;
   onSelectColorMode: (mode: ColorMode) => void;
   onSelectButtonColorScheme: (scheme: ButtonColorScheme) => void;
+  onSelectSwipeSpeed: (speed: SwipeSpeedOption) => void;
   onChangePlaybackRate: (rate: number) => void;
   onOpenEq: () => void;
   onClose: () => void;
@@ -57,6 +66,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   uiTheme,
   colorMode,
   buttonColorScheme,
+  swipeSpeed,
   playbackRate,
   activeTrackBitrateKbps,
   onSelectFont,
@@ -66,6 +76,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectUiTheme,
   onSelectColorMode,
   onSelectButtonColorScheme,
+  onSelectSwipeSpeed,
   onChangePlaybackRate,
   onOpenEq,
   onClose,
@@ -303,6 +314,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <p className="text-xs font-semibold">Metro Pivot</p>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Swipe headers & A–Z tiles</p>
             </button>
+          </div>
+        </div>
+
+        {/* Metro Swipe Animation Speed */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              <MoveHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
+              <span>Swipe Animation Speed</span>
+            </div>
+            <span className="text-[11px] font-mono-nums text-[var(--accent-soft)]">
+              {SWIPE_SPEED_PRESETS.find((p) => p.id === swipeSpeed)?.durationMs ?? 460} ms
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {SWIPE_SPEED_PRESETS.map((preset) => {
+              const selected = swipeSpeed === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => onSelectSwipeSpeed(preset.id)}
+                  aria-pressed={selected}
+                  className={`min-h-[48px] px-3 py-2 rounded-xl border transition-colors text-left ${
+                    selected
+                      ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                      : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/15'
+                  }`}
+                >
+                  <p className="text-xs font-semibold">{preset.label}</p>
+                  <p className="text-[10px] font-mono-nums text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+                    {preset.durationMs} ms
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -40,6 +40,7 @@ import {
   SmartPlaylistRules,
   SongsDisplayMode,
   StorageEstimateInfo,
+  SwipeSpeedOption,
   Track,
   TrackMetadataUpdate,
   UiScaleOption,
@@ -1268,6 +1269,10 @@ export default function App() {
               onSelectButtonColorScheme={(buttonColorScheme: ButtonColorScheme) =>
                 updateSettings((prev) => ({ ...prev, buttonColorScheme }))
               }
+              swipeSpeed={settings.swipeSpeed}
+              onSelectSwipeSpeed={(swipeSpeed: SwipeSpeedOption) =>
+                updateSettings((prev) => ({ ...prev, swipeSpeed }))
+              }
               playbackRate={settings.playbackRate}
               activeTrackBitrateKbps={currentTrack?.bitrateKbps}
               onChangePlaybackRate={(rate: number) => {
@@ -1431,6 +1436,7 @@ export default function App() {
         uiTheme={settings.uiTheme}
         colorMode={settings.colorMode}
         buttonColorScheme={settings.buttonColorScheme}
+        swipeSpeed={settings.swipeSpeed}
         playbackRate={settings.playbackRate}
         activeTrackBitrateKbps={currentTrack?.bitrateKbps}
         onSelectFont={(font: FontOption) =>
@@ -1453,6 +1459,9 @@ export default function App() {
         }
         onSelectButtonColorScheme={(buttonColorScheme: ButtonColorScheme) =>
           updateSettings((prev) => ({ ...prev, buttonColorScheme }))
+        }
+        onSelectSwipeSpeed={(swipeSpeed: SwipeSpeedOption) =>
+          updateSettings((prev) => ({ ...prev, swipeSpeed }))
         }
         onChangePlaybackRate={(rate: number) => {
           const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));

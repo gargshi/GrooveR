@@ -1,4 +1,4 @@
-import { ButtonColorScheme, ColorMode, FontOption, UiScaleOption } from '../types/music';
+import { ButtonColorScheme, ColorMode, FontOption, SwipeSpeedOption, UiScaleOption } from '../types/music';
 
 export interface FontPreset {
   id: FontOption;
@@ -204,4 +204,21 @@ export function applyButtonColorScheme(
   rootStyle.setProperty('--accent-border', preset.border);
   rootStyle.setProperty('--accent-glow', preset.glow);
   rootStyle.setProperty('--accent-dim', preset.dim);
+}
+
+export interface SwipeSpeedPreset {
+  id: SwipeSpeedOption;
+  label: string;
+  description: string;
+  durationMs: number;
+}
+
+export const SWIPE_SPEED_PRESETS: SwipeSpeedPreset[] = [
+  { id: 'fast', label: 'Snappy', description: '260 ms crisp glide', durationMs: 260 },
+  { id: 'elegant', label: 'Elegant', description: '460 ms smooth glide', durationMs: 460 },
+  { id: 'slow', label: 'Slow', description: '680 ms unhurried glide', durationMs: 680 },
+];
+
+export function getSwipeDurationMs(speed?: SwipeSpeedOption): number {
+  return SWIPE_SPEED_PRESETS.find((p) => p.id === speed)?.durationMs ?? 460;
 }

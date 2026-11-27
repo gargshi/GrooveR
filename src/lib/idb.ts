@@ -1,4 +1,4 @@
-import { ButtonColorScheme, ColorMode, EqSettings, PersistedSettings, Playlist, StorageEstimateInfo, Track } from '../types/music';
+import { ButtonColorScheme, ColorMode, EqSettings, PersistedSettings, Playlist, StorageEstimateInfo, SwipeSpeedOption, Track } from '../types/music';
 
 const DB_NAME = 'groover_offline_db';
 const DB_VERSION = 1;
@@ -35,6 +35,7 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   uiTheme: 'groover',
   colorMode: 'dark',
   buttonColorScheme: 'blue',
+  swipeSpeed: 'elegant',
   eq: DEFAULT_EQ,
 };
 
@@ -244,11 +245,16 @@ export async function loadSettings(): Promise<PersistedSettings> {
     ? stored.buttonColorScheme
     : DEFAULT_SETTINGS.buttonColorScheme;
   const colorMode: ColorMode = stored.colorMode === 'light' ? 'light' : 'dark';
+  const validSwipeSpeeds: SwipeSpeedOption[] = ['fast', 'elegant', 'slow'];
+  const swipeSpeed = validSwipeSpeeds.includes(stored.swipeSpeed)
+    ? stored.swipeSpeed
+    : DEFAULT_SETTINGS.swipeSpeed;
   return {
     ...DEFAULT_SETTINGS,
     ...stored,
     colorMode,
     buttonColorScheme,
+    swipeSpeed,
     playbackRate:
       typeof stored.playbackRate === 'number' && Number.isFinite(stored.playbackRate)
         ? Math.min(2, Math.max(0.5, stored.playbackRate))

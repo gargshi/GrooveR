@@ -21,6 +21,7 @@ interface PivotHeaderProps {
   searchQuery: string;
   isInDrilldown?: boolean;
   skipHeaderSlide?: boolean;
+  swipeDurationMs?: number;
   onToggleSearch: () => void;
   onSearchChange: (q: string) => void;
   onSelectView: (view: LibraryView) => void;
@@ -42,6 +43,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
   searchQuery,
   isInDrilldown = false,
   skipHeaderSlide = false,
+  swipeDurationMs = 460,
   onToggleSearch,
   onSearchChange,
   onSelectView,
@@ -130,9 +132,9 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => setSkipTransition(false));
       });
-    }, 280);
+    }, swipeDurationMs + 25);
     return () => window.clearTimeout(timer);
-  }, [slotIndex]);
+  }, [slotIndex, swipeDurationMs]);
 
   const progress = Math.max(-1, Math.min(1, -swipeOffsetX / Math.max(240, containerWidth)));
   const incomingSlot =
@@ -160,9 +162,10 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
   };
 
   const disableHeaderMotion = isSwiping || skipTransition || skipHeaderSlide;
+  const opacityDurationMs = Math.round(swipeDurationMs * 0.78);
 
   return (
-    <header className="space-y-2 pt-1 select-none">
+    <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-4 sm:pt-5 pb-2 bg-white/95 dark:bg-black/95 backdrop-blur-md space-y-2 select-none">
       {/* Top Bar: MUSIC title + utility actions */}
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs font-bold tracking-[0.18em] uppercase text-zinc-900 dark:text-white">
@@ -224,7 +227,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
             transform: `translate3d(${currentTranslateX}px, 0, 0)`,
             transition: disableHeaderMotion
               ? 'none'
-              : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+              : `transform ${swipeDurationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
           }}
           className="flex items-baseline gap-6 sm:gap-8 w-max will-change-transform"
         >
@@ -260,7 +263,7 @@ export const PivotHeader: React.FC<PivotHeaderProps> = ({
                 }}
                 style={{
                   opacity,
-                  transition: disableHeaderMotion ? 'none' : 'opacity 220ms ease',
+                  transition: disableHeaderMotion ? 'none' : `opacity ${opacityDurationMs}ms ease`,
                 }}
                 className={`text-[2.45rem] sm:text-5xl font-light lowercase tracking-tight leading-none whitespace-nowrap shrink-0 focus-visible:outline-none ${
                   isSlotActive

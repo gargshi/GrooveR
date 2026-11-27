@@ -14,6 +14,7 @@ import {
   Maximize2,
   Mic2,
   Moon,
+  MoveHorizontal,
   Palette,
   Play,
   Plus,
@@ -30,7 +31,13 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
+import {
+  BUTTON_COLOR_PRESETS,
+  FONT_PRESETS,
+  getSwipeDurationMs,
+  SWIPE_SPEED_PRESETS,
+  UI_SCALE_PRESETS,
+} from '../lib/fonts';
 import {
   formatBytes,
   formatDuration,
@@ -51,6 +58,7 @@ import {
   SortDirection,
   SortField,
   StorageEstimateInfo,
+  SwipeSpeedOption,
   Track,
   UiScaleOption,
   UiTheme,
@@ -138,6 +146,8 @@ interface LibraryViewsProps {
   onSelectColorMode: (mode: ColorMode) => void;
   buttonColorScheme: ButtonColorScheme;
   onSelectButtonColorScheme: (scheme: ButtonColorScheme) => void;
+  swipeSpeed: SwipeSpeedOption;
+  onSelectSwipeSpeed: (speed: SwipeSpeedOption) => void;
   playbackRate: number;
   activeTrackBitrateKbps?: number;
   onChangePlaybackRate: (rate: number) => void;
@@ -190,6 +200,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onSelectColorMode,
   buttonColorScheme,
   onSelectButtonColorScheme,
+  swipeSpeed,
+  onSelectSwipeSpeed,
   playbackRate,
   activeTrackBitrateKbps,
   onChangePlaybackRate,
@@ -197,6 +209,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   backHandlerRef,
 }) => {
   const isPivot = uiTheme === 'pivot';
+  const swipeDurationMs = getSwipeDurationMs(swipeSpeed);
   const [searchQuery, setSearchQuery] = useState('');
   const [songFilter, setSongFilter] = useState<SongFilter>('all');
   const [sortField, setSortField] = useState<SortField>('addedAt');
@@ -309,12 +322,12 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
     pane.style.transform = `translate3d(${enterSign * distance}px, 0, 0)`;
     pane.style.opacity = '0.28';
 
+    const opacityDurationMs = Math.round(swipeDurationMs * 0.78);
     let raf2 = 0;
     const raf1 = window.requestAnimationFrame(() => {
       raf2 = window.requestAnimationFrame(() => {
         if (!pivotTapEnterRef.current) return;
-        pivotTapEnterRef.current.style.transition =
-          'transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease';
+        pivotTapEnterRef.current.style.transition = `transform ${swipeDurationMs}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${opacityDurationMs}ms ease`;
         pivotTapEnterRef.current.style.transform = 'translate3d(0, 0, 0)';
         pivotTapEnterRef.current.style.opacity = '1';
       });
@@ -324,7 +337,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       window.cancelAnimationFrame(raf1);
       if (raf2) window.cancelAnimationFrame(raf2);
     };
-  }, [activeView, isPivot, pivotContainerWidth]);
+  }, [activeView, isPivot, pivotContainerWidth, swipeDurationMs]);
 
   const filteredSongs = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -690,13 +703,13 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
         pivotSettleTimerRef.current = window.setTimeout(() => {
           setPivotSettlingSide(null);
           pivotSettleTimerRef.current = null;
-        }, 265);
+        }, swipeDurationMs + 10);
       }
       pivotDragRef.current = null;
       setPivotSwipeX(0);
       setIsPivotSwiping(false);
     },
-    [pivotSwipeX]
+    [pivotSwipeX, swipeDurationMs]
   );
 
   const finishPivotSwipe = useCallback(
@@ -760,7 +773,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
           window.requestAnimationFrame(() => {
             window.requestAnimationFrame(() => setSkipHeaderSlide(false));
           });
-        }, 265);
+        }, swipeDurationMs + 10);
         return;
       }
 
@@ -770,12 +783,12 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
         pivotSettleTimerRef.current = window.setTimeout(() => {
           setPivotSettlingSide(null);
           pivotSettleTimerRef.current = null;
-        }, 265);
+        }, swipeDurationMs + 10);
       }
       setPivotSwipeX(0);
       setIsPivotSwiping(false);
     },
-    [activeView, onSelectView, pivotContainerWidth, resetDrilldowns]
+    [activeView, onSelectView, pivotContainerWidth, resetDrilldowns, swipeDurationMs]
   );
 
   const handleJumpToLetter = useCallback(
@@ -806,8 +819,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             e.stopPropagation();
           }
         }}
-        className={`px-4 sm:px-8 py-5 max-w-5xl mx-auto space-y-6 overflow-x-clip ${
-          isPivot ? 'touch-pan-y select-none' : ''
+        className={`px-4 sm:px-8 max-w-5xl mx-auto space-y-6 overflow-x-clip ${
+          isPivot ? 'pt-0 pb-5 touch-pan-y select-none' : 'py-5'
         }`}
       >
         {isPivot ? (
@@ -820,6 +833,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             searchQuery={searchQuery}
             isInDrilldown={isInDrilldown}
             skipHeaderSlide={skipHeaderSlide}
+            swipeDurationMs={swipeDurationMs}
             onToggleSearch={() => setPivotSearchOpen((v) => !v)}
             onSearchChange={setSearchQuery}
             onSelectView={(v) => {
@@ -1144,7 +1158,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                 <div
                   key={group.letter}
                   id={isPreview ? undefined : `pivot-group-songs-${group.letter}`}
-                  className="space-y-1.5 scroll-mt-4"
+                  className="space-y-1.5 scroll-mt-32"
                 >
                   <button
                     type="button"
@@ -1331,7 +1345,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   <div
                     key={group.letter}
                     id={isPreview ? undefined : `pivot-group-albums-${group.letter}`}
-                    className="space-y-2.5 scroll-mt-4"
+                    className="space-y-2.5 scroll-mt-32"
                   >
                     <button
                       type="button"
@@ -1515,7 +1529,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                   <div
                     key={group.letter}
                     id={isPreview ? undefined : `pivot-group-artists-${group.letter}`}
-                    className="space-y-2.5 scroll-mt-4"
+                    className="space-y-2.5 scroll-mt-32"
                   >
                     <button
                       type="button"
@@ -2179,6 +2193,56 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             </div>
           </div>
 
+          {/* Swipe Animation Speed Selector */}
+          <div
+            className={`p-5 border space-y-3 ${
+              isPivot
+                ? 'rounded-none bg-white dark:bg-black border-zinc-200 dark:border-white/15'
+                : 'rounded-2xl bg-white dark:bg-[#111318] border-zinc-200 dark:border-white/[0.07]'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <MoveHorizontal className="w-4 h-4 text-[var(--accent-primary)]" />
+                <div>
+                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Swipe Animation Speed</h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Control how fast tabs glide when swiping in Metro Pivot
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-mono-nums text-[var(--accent-soft)]">
+                {swipeDurationMs} ms
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5">
+              {SWIPE_SPEED_PRESETS.map((preset) => {
+                const selected = swipeSpeed === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => onSelectSwipeSpeed(preset.id)}
+                    aria-pressed={selected}
+                    className={`min-h-[52px] px-3.5 py-2.5 text-left border transition-colors ${
+                      isPivot ? 'rounded-none' : 'rounded-xl'
+                    } ${
+                      selected
+                        ? 'bg-[var(--accent-tint)] border-[var(--accent-border)] text-zinc-900 dark:text-white'
+                        : 'bg-zinc-100 dark:bg-[#0D0F14] border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/20'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">{preset.label}</p>
+                    <p className="text-[11px] font-mono-nums text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+                      {preset.description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Button Color Scheme Selector */}
           <div
             className={`p-5 border space-y-3 ${
@@ -2627,8 +2691,8 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
           e.stopPropagation();
         }
       }}
-      className={`px-4 sm:px-8 py-5 sm:py-7 max-w-7xl mx-auto space-y-5 ${
-        isPivot ? 'touch-pan-y select-none' : ''
+      className={`px-4 sm:px-8 max-w-7xl mx-auto space-y-5 ${
+        isPivot ? 'pt-0 pb-5 sm:pb-7 touch-pan-y select-none' : 'py-5 sm:py-7'
       }`}
     >
       {isPivot ? (
@@ -2641,6 +2705,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
           searchQuery={searchQuery}
           isInDrilldown={isInDrilldown}
           skipHeaderSlide={skipHeaderSlide}
+          swipeDurationMs={swipeDurationMs}
           onToggleSearch={() => setPivotSearchOpen((v) => !v)}
           onSearchChange={setSearchQuery}
           onSelectView={(v) => {
@@ -2735,7 +2800,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
             transition:
               isPivotSwiping || isRestingAtCenter
                 ? 'none'
-                : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+                : `transform ${swipeDurationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
           }}
           className="will-change-transform"
         >
@@ -2751,7 +2816,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
               transform: `translate3d(${previewOffsetX}px, 0, 0)`,
               transition: isPivotSwiping
                 ? 'none'
-                : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+                : `transform ${swipeDurationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
             }}
             className="absolute inset-x-0 top-0 pointer-events-none select-none will-change-transform"
           >

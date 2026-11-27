@@ -108,6 +108,8 @@ export type ColorMode = 'dark' | 'light';
 
 export type ButtonColorScheme = 'blue' | 'cyan' | 'emerald' | 'crimson' | 'amber' | 'orange';
 
+export type SwipeSpeedOption = 'fast' | 'elegant' | 'slow';
+
 export interface PersistedSettings {
   id: string;
   volume: number;
@@ -122,6 +124,7 @@ export interface PersistedSettings {
   uiTheme: UiTheme;
   colorMode: ColorMode;
   buttonColorScheme: ButtonColorScheme;
+  swipeSpeed: SwipeSpeedOption;
   eq: EqSettings;
   lastTrackId?: string;
 }
