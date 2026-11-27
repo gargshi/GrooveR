@@ -102,7 +102,11 @@ export class GrooveAudioEngine {
 
   seek(time: number): void {
     if (Number.isFinite(time) && time >= 0) {
-      this.audio.currentTime = Math.min(time, this.audio.duration || time);
+      const maxDur =
+        Number.isFinite(this.audio.duration) && this.audio.duration > 0
+          ? this.audio.duration
+          : time;
+      this.audio.currentTime = Math.min(time, maxDur);
     }
   }
 
@@ -155,12 +159,21 @@ export class GrooveAudioEngine {
     return out;
   }
 
+  private lastSyncedTrack: Track | null = null;
+  private lastMediaEnabled = false;
+
   private getNativeMediaPlugin(): {
     updateSession?: (opts: {
       title: string;
       artist: string;
       album: string;
       artwork: string;
+      isPlaying: boolean;
+      playbackSpeed: number;
+      durationMs: number;
+      positionMs: number;
+    }) => Promise<void>;
+    updatePosition?: (opts: {
       isPlaying: boolean;
       playbackSpeed: number;
       durationMs: number;
@@ -178,6 +191,12 @@ export class GrooveAudioEngine {
                 artist: string;
                 album: string;
                 artwork: string;
+                isPlaying: boolean;
+                playbackSpeed: number;
+                durationMs: number;
+                positionMs: number;
+              }) => Promise<void>;
+              updatePosition?: (opts: {
                 isPlaying: boolean;
                 playbackSpeed: number;
                 durationMs: number;
@@ -205,6 +224,8 @@ export class GrooveAudioEngine {
     }
   ): void {
     const nativePlugin = this.getNativeMediaPlugin();
+    this.lastSyncedTrack = enabled && track ? track : null;
+    this.lastMediaEnabled = enabled;
 
     if (!enabled || !track) {
       if ('mediaSession' in navigator) {
@@ -248,12 +269,26 @@ export class GrooveAudioEngine {
       });
     }
 
-    const safeDuration = Number.isFinite(this.audio.duration) && this.audio.duration > 0
-      ? this.audio.duration
-      : track.duration || 0;
-    const safePos = Math.min(this.audio.currentTime || 0, safeDuration);
+    const safeDuration =
+      Number.isFinite(this.audio.duration) && this.audio.duration > 0
+        ? this.audio.duration
+        : track.duration || 0;
+    const rawPos = Number.isFinite(this.audio.currentTime) ? this.audio.currentTime : 0;
+    const safePos = safeDuration > 0 ? Math.max(0, Math.min(rawPos, safeDuration)) : Math.max(0, rawPos);
 
-    this.updatePositionState(safePos, safeDuration, isPlaying, enabled);
+    if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+      if (Number.isFinite(safeDuration) && safeDuration > 0) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: safeDuration,
+            playbackRate: isPlaying ? this.playbackRate : 0,
+            position: safePos,
+          });
+        } catch {
+          // ignore unsupported browser edge cases
+        }
+      }
+    }
 
     if (nativePlugin?.updateSession) {
       void nativePlugin
@@ -264,8 +299,8 @@ export class GrooveAudioEngine {
           artwork: track.coverArt ?? '',
           isPlaying,
           playbackSpeed: this.playbackRate,
-          durationMs: Math.round(safeDuration * 1000),
-          positionMs: Math.round(safePos * 1000),
+          durationMs: Math.max(0, Math.round(safeDuration * 1000)),
+          positionMs: Math.max(0, Math.round(safePos * 1000)),
         })
         .catch(() => {});
     }
@@ -278,18 +313,58 @@ export class GrooveAudioEngine {
     enabled: boolean
   ): void {
     if (!enabled) return;
-    if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-      if (Number.isFinite(durationSec) && durationSec > 0) {
+
+    const resolvedDuration =
+      Number.isFinite(durationSec) && durationSec > 0
+        ? durationSec
+        : Number.isFinite(this.audio.duration) && this.audio.duration > 0
+        ? this.audio.duration
+        : this.lastSyncedTrack?.duration || 0;
+
+    const safePos =
+      resolvedDuration > 0
+        ? Math.max(0, Math.min(Number.isFinite(positionSec) ? positionSec : 0, resolvedDuration))
+        : Math.max(0, Number.isFinite(positionSec) ? positionSec : 0);
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+      if ('setPositionState' in navigator.mediaSession && resolvedDuration > 0) {
         try {
           navigator.mediaSession.setPositionState({
-            duration: durationSec,
+            duration: resolvedDuration,
             playbackRate: isPlaying ? this.playbackRate : 0,
-            position: Math.max(0, Math.min(positionSec, durationSec)),
+            position: safePos,
           });
         } catch {
           // ignore unsupported browser edge cases
         }
       }
+    }
+
+    if (!this.lastMediaEnabled || !this.lastSyncedTrack) return;
+    const nativePlugin = this.getNativeMediaPlugin();
+    if (nativePlugin?.updatePosition) {
+      void nativePlugin
+        .updatePosition({
+          isPlaying,
+          playbackSpeed: this.playbackRate,
+          durationMs: Math.max(0, Math.round(resolvedDuration * 1000)),
+          positionMs: Math.max(0, Math.round(safePos * 1000)),
+        })
+        .catch(() => {});
+    } else if (nativePlugin?.updateSession) {
+      void nativePlugin
+        .updateSession({
+          title: this.lastSyncedTrack.title,
+          artist: this.lastSyncedTrack.artist,
+          album: this.lastSyncedTrack.album,
+          artwork: this.lastSyncedTrack.coverArt ?? '',
+          isPlaying,
+          playbackSpeed: this.playbackRate,
+          durationMs: Math.max(0, Math.round(resolvedDuration * 1000)),
+          positionMs: Math.max(0, Math.round(safePos * 1000)),
+        })
+        .catch(() => {});
     }
   }
 

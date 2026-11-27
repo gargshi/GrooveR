@@ -266,6 +266,50 @@ export default function App() {
     return queueTracks[currentQueueIndex];
   }, [queueTracks, currentQueueIndex]);
 
+  const mediaStateRef = useRef({
+    track: currentTrack,
+    duration,
+    isPlaying,
+    lockscreenWidget: settings.lockscreenWidget,
+  });
+  mediaStateRef.current = {
+    track: currentTrack,
+    duration,
+    isPlaying,
+    lockscreenWidget: settings.lockscreenWidget,
+  };
+
+  const syncMediaPosition = useCallback(
+    (posOverride?: number, durOverride?: number, playingOverride?: boolean) => {
+      const state = mediaStateRef.current;
+      if (!state.lockscreenWidget || !state.track) return;
+      const audio = engine.element;
+      const resolvedDuration =
+        durOverride !== undefined && Number.isFinite(durOverride) && durOverride > 0
+          ? durOverride
+          : Number.isFinite(audio.duration) && audio.duration > 0
+          ? audio.duration
+          : state.duration > 0
+          ? state.duration
+          : state.track.duration || 0;
+      const resolvedPos =
+        posOverride !== undefined && Number.isFinite(posOverride)
+          ? posOverride
+          : Number.isFinite(audio.currentTime)
+          ? audio.currentTime
+          : 0;
+      const resolvedPlaying =
+        playingOverride !== undefined ? playingOverride : state.isPlaying;
+      engine.updatePositionState(
+        resolvedPos,
+        resolvedDuration,
+        resolvedPlaying,
+        state.lockscreenWidget
+      );
+    },
+    [engine]
+  );
+
   const playQueueAtIndex = useCallback(
     async (
       idx: number,
@@ -348,6 +392,8 @@ export default function App() {
 
     if (settings.repeat === 'one' && currentQueueIndex >= 0) {
       engine.seek(0);
+      setCurrentTime(0);
+      syncMediaPosition(0, undefined, true);
       void engine.play();
       return;
     }
@@ -431,6 +477,7 @@ export default function App() {
     if (currentTime > 3) {
       engine.seek(0);
       setCurrentTime(0);
+      syncMediaPosition(0);
       return;
     }
 
@@ -447,6 +494,7 @@ export default function App() {
       }
       engine.seek(0);
       setCurrentTime(0);
+      syncMediaPosition(0);
       return;
     }
 
@@ -466,6 +514,7 @@ export default function App() {
     settings.repeat,
     engine,
     playQueueAtIndex,
+    syncMediaPosition,
   ]);
 
   const handleTogglePlay = useCallback(async () => {
@@ -502,29 +551,50 @@ export default function App() {
     const audio = engine.element;
 
     const onTimeUpdate = () => setCurrentTime(audio.currentTime || 0);
-    const onLoadedMetadata = () => {
+    const onDurationResolved = () => {
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         setDuration(audio.duration);
+        syncMediaPosition(audio.currentTime || 0, audio.duration, !audio.paused);
       }
     };
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
+    const onSeeked = () => {
+      const pos = audio.currentTime || 0;
+      setCurrentTime(pos);
+      syncMediaPosition(pos, undefined, !audio.paused);
+    };
+    const onRateChange = () => {
+      syncMediaPosition(audio.currentTime || 0, undefined, !audio.paused);
+    };
+    const onPlay = () => {
+      setIsPlaying(true);
+      syncMediaPosition(audio.currentTime || 0, undefined, true);
+    };
+    const onPause = () => {
+      setIsPlaying(false);
+      syncMediaPosition(audio.currentTime || 0, undefined, false);
+    };
     const onEnded = () => handleNext();
 
     audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('loadedmetadata', onDurationResolved);
+    audio.addEventListener('durationchange', onDurationResolved);
+    audio.addEventListener('seeked', onSeeked);
+    audio.addEventListener('ratechange', onRateChange);
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('loadedmetadata', onDurationResolved);
+      audio.removeEventListener('durationchange', onDurationResolved);
+      audio.removeEventListener('seeked', onSeeked);
+      audio.removeEventListener('ratechange', onRateChange);
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnded);
     };
-  }, [engine, handleNext]);
+  }, [engine, handleNext, syncMediaPosition]);
 
   // MediaSession API + Native Lockscreen Widget Sync (OnePlus 15R Lockscreen & Bluetooth Controls)
   useEffect(() => {
@@ -539,31 +609,33 @@ export default function App() {
       onSeek: (t) => {
         engine.seek(t);
         setCurrentTime(t);
-        engine.updatePositionState(t, duration, isPlaying, settings.lockscreenWidget);
+        syncMediaPosition(t);
       },
     });
   }, [
     engine,
     currentTrack,
     isPlaying,
-    duration,
     settings.lockscreenWidget,
-    settings.playbackRate,
     handleTogglePlay,
     handlePrev,
     handleNext,
+    syncMediaPosition,
   ]);
 
-  // Keep MediaSession position bar in sync smoothly
+  // Sync playback rate changes immediately to lockscreen & status bar widget
+  useEffect(() => {
+    syncMediaPosition();
+  }, [settings.playbackRate, syncMediaPosition]);
+
+  // Keep MediaSession & native lockscreen progress bar in sync smoothly
   useEffect(() => {
     if (!isPlaying || !currentTrack || !settings.lockscreenWidget) return;
     const interval = setInterval(() => {
-      const audio = engine.element;
-      const dur = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : currentTrack.duration;
-      engine.updatePositionState(audio.currentTime || 0, dur, true, settings.lockscreenWidget);
+      syncMediaPosition();
     }, 1000);
     return () => clearInterval(interval);
-  }, [engine, isPlaying, currentTrack, settings.lockscreenWidget]);
+  }, [isPlaying, currentTrack, settings.lockscreenWidget, syncMediaPosition]);
 
   // Listen for native Android LockscreenMediaPlugin button actions
   useEffect(() => {
@@ -586,15 +658,16 @@ export default function App() {
       } else if (detail.action === 'prev') {
         handlePrev();
       } else if (detail.action === 'seek' && typeof detail.positionMs === 'number') {
-        const sec = detail.positionMs / 1000;
+        const sec = Math.max(0, detail.positionMs / 1000);
         engine.seek(sec);
         setCurrentTime(sec);
+        syncMediaPosition(sec);
       }
     };
 
     window.addEventListener('grooverMediaAction', onNativeMediaAction);
     return () => window.removeEventListener('grooverMediaAction', onNativeMediaAction);
-  }, [engine, isPlaying, handleTogglePlay, handleNext, handlePrev]);
+  }, [engine, isPlaying, handleTogglePlay, handleNext, handlePrev, syncMediaPosition]);
 
   // Sleep Timer Countdown
   useEffect(() => {
@@ -1052,6 +1125,7 @@ export default function App() {
                 const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));
                 engine.setPlaybackRate(clamped);
                 updateSettings((prev) => ({ ...prev, playbackRate: clamped }));
+                syncMediaPosition();
               }}
               onTogglePlay={() => void handleTogglePlay()}
             />
@@ -1077,6 +1151,7 @@ export default function App() {
         onSeek={(t) => {
           engine.seek(t);
           setCurrentTime(t);
+          syncMediaPosition(t);
         }}
         onVolumeChange={(v) => {
           engine.setVolume(v, false);
@@ -1138,6 +1213,7 @@ export default function App() {
         onSeek={(t) => {
           engine.seek(t);
           setCurrentTime(t);
+          syncMediaPosition(t);
         }}
         onToggleShuffle={handleToggleShuffle}
         onCycleRepeat={() =>
@@ -1228,6 +1304,7 @@ export default function App() {
           const clamped = Math.min(2, Math.max(0.5, Number.isFinite(rate) ? rate : 1));
           engine.setPlaybackRate(clamped);
           updateSettings((prev) => ({ ...prev, playbackRate: clamped }));
+          syncMediaPosition();
         }}
         onOpenEq={() => setIsEqOpen(true)}
         onClose={() => setIsSettingsOpen(false)}
