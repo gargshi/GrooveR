@@ -22,13 +22,20 @@ import {
   Shuffle,
   SlidersHorizontal,
   Smartphone,
+  Sparkles,
   Trash2,
   Type,
   Upload,
   X,
 } from 'lucide-react';
 import { BUTTON_COLOR_PRESETS, FONT_PRESETS, UI_SCALE_PRESETS } from '../lib/fonts';
-import { formatBytes, formatDuration, isLosslessFormat } from '../lib/formatters';
+import {
+  formatBytes,
+  formatDuration,
+  getAlbumArtistEntries,
+  isLosslessFormat,
+} from '../lib/formatters';
+import { describeSmartRules, resolvePlaylistTracks } from '../lib/smartPlaylists';
 import {
   AlbumSummary,
   ArtistSummary,
@@ -105,6 +112,7 @@ interface LibraryViewsProps {
   onAddToPlaylist: (playlistId: string, trackId: string) => void;
   onRemoveFromPlaylist: (playlistId: string, trackId: string) => void;
   onCreatePlaylist: () => void;
+  onOpenSmartPlaylistModal: (editing?: Playlist) => void;
   onRenamePlaylist: (playlist: Playlist) => void;
   onDeletePlaylist: (playlistId: string) => void;
   onEditTrack: (track: Track) => void;
@@ -153,6 +161,7 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
   onAddToPlaylist,
   onRemoveFromPlaylist,
   onCreatePlaylist,
+  onOpenSmartPlaylistModal,
   onRenamePlaylist,
   onDeletePlaylist,
   onEditTrack,
@@ -255,24 +264,27 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
     const map = new Map<string, AlbumSummary>();
     const q = searchQuery.trim().toLowerCase();
     for (const trk of tracks) {
-      const key = `${trk.album}__${trk.albumArtist || trk.artist}`;
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, {
-          key,
-          album: trk.album,
-          albumArtist: trk.albumArtist || trk.artist,
-          year: trk.year,
-          coverArt: trk.coverArt,
-          tracks: [trk],
-          totalDuration: trk.duration,
-          totalSize: trk.fileSize,
-        });
-      } else {
-        existing.tracks.push(trk);
-        existing.totalDuration += trk.duration;
-        existing.totalSize += trk.fileSize;
-        if (!existing.coverArt && trk.coverArt) existing.coverArt = trk.coverArt;
+      const individualArtists = getAlbumArtistEntries(trk.albumArtist, trk.artist);
+      for (const individualArtist of individualArtists) {
+        const key = `${trk.album.trim().toLowerCase()}__${individualArtist.toLowerCase()}`;
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, {
+            key,
+            album: trk.album,
+            albumArtist: individualArtist,
+            year: trk.year,
+            coverArt: trk.coverArt,
+            tracks: [trk],
+            totalDuration: trk.duration,
+            totalSize: trk.fileSize,
+          });
+        } else if (!existing.tracks.some((t) => t.id === trk.id)) {
+          existing.tracks.push(trk);
+          existing.totalDuration += trk.duration;
+          existing.totalSize += trk.fileSize;
+          if (!existing.coverArt && trk.coverArt) existing.coverArt = trk.coverArt;
+        }
       }
     }
     const list = Array.from(map.values()).map((a) => ({
@@ -280,8 +292,16 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
       tracks: [...a.tracks].sort((x, y) => (x.trackNumber || 999) - (y.trackNumber || 999)),
     }));
     return list
-      .filter((a) => !q || a.album.toLowerCase().includes(q) || a.albumArtist.toLowerCase().includes(q))
-      .sort((a, b) => a.album.localeCompare(b.album));
+      .filter(
+        (a) =>
+          !q ||
+          a.album.toLowerCase().includes(q) ||
+          a.albumArtist.toLowerCase().includes(q)
+      )
+      .sort(
+        (a, b) =>
+          a.album.localeCompare(b.album) || a.albumArtist.localeCompare(b.albumArtist)
+      );
   }, [tracks, searchQuery]);
 
   const artists = useMemo<ArtistSummary[]>(() => {
@@ -1386,9 +1406,11 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
         <section className="space-y-6">
           {activePlaylist ? (
             (() => {
-              const plTracks = activePlaylist.trackIds
-                .map((id) => tracks.find((t) => t.id === id))
-                .filter((t): t is Track => Boolean(t));
+              const plTracks = resolvePlaylistTracks(activePlaylist, tracks);
+              const smartSummary =
+                activePlaylist.isSmart && activePlaylist.smartRules
+                  ? describeSmartRules(activePlaylist.smartRules)
+                  : null;
               return (
                 <div className="space-y-5">
                   <button
@@ -1400,192 +1422,245 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     <span>All Playlists</span>
                   </button>
 
-                    <div
-                      className={`flex flex-col sm:flex-row sm:items-end justify-between gap-4 p-5 border ${
-                        isPivot
-                          ? 'rounded-none bg-black border-white/15'
-                          : 'rounded-3xl bg-[#111318] border-white/[0.07]'
-                      }`}
-                    >
-                      <div>
-                        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
-                          {activePlaylist.name}
-                        </h1>
-                        {activePlaylist.description && (
-                          <p className="text-sm text-zinc-300 mt-1">{activePlaylist.description}</p>
-                        )}
-                        <p className="text-xs text-zinc-400 mt-1.5 font-mono-nums">
-                          {plTracks.length} {plTracks.length === 1 ? 'track' : 'tracks'} ·{' '}
-                          {formatDuration(plTracks.reduce((s, t) => s + t.duration, 0))}
+                  <div
+                    className={`flex flex-col sm:flex-row sm:items-end justify-between gap-4 p-5 border ${
+                      isPivot
+                        ? 'rounded-none bg-black border-white/15'
+                        : 'rounded-3xl bg-[#111318] border-white/[0.07]'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      {activePlaylist.isSmart && (
+                        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-soft)] mb-1">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Smart Playlist</span>
+                        </div>
+                      )}
+                      <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
+                        {activePlaylist.name}
+                      </h1>
+                      {(activePlaylist.description || smartSummary) && (
+                        <p className="text-sm text-zinc-300 mt-1">
+                          {activePlaylist.description || smartSummary}
                         </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={plTracks.length === 0}
-                          onClick={() => onPlayTrackList(plTracks, 0)}
-                          className={`min-h-[44px] px-4 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
-                            isPivot ? 'rounded-none' : 'rounded-xl'
-                          }`}
-                        >
-                          <Play className="w-4 h-4 fill-current" />
-                          <span>Play</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onRenamePlaylist(activePlaylist)}
-                          className={`min-h-[44px] px-4 bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 text-xs font-medium ${
-                            isPivot ? 'rounded-none border border-white/15' : 'rounded-xl'
-                          }`}
-                        >
-                          Rename
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onDeletePlaylist(activePlaylist.id);
-                            onSelectPlaylist(null);
-                          }}
-                          className={`min-h-[44px] px-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-medium ${
-                            isPivot ? 'rounded-none' : 'rounded-xl'
-                          }`}
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      )}
+                      {smartSummary && activePlaylist.description && activePlaylist.description !== smartSummary && (
+                        <p className="text-xs text-zinc-400 mt-1">{smartSummary}</p>
+                      )}
+                      <p className="text-xs text-zinc-400 mt-1.5 font-mono-nums">
+                        {plTracks.length} {plTracks.length === 1 ? 'track' : 'tracks'} ·{' '}
+                        {formatDuration(plTracks.reduce((s, t) => s + t.duration, 0))}
+                      </p>
                     </div>
-
-                    {plTracks.length === 0 ? (
-                      <div
-                        className={`py-12 text-center border ${
-                          isPivot
-                            ? 'rounded-none bg-black border-white/15'
-                            : 'rounded-2xl bg-[#111318] border-white/[0.06]'
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={plTracks.length === 0}
+                        onClick={() => onPlayTrackList(plTracks, 0)}
+                        className={`min-h-[44px] px-4 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                          isPivot ? 'rounded-none' : 'rounded-xl'
                         }`}
                       >
-                        <p className="text-sm font-medium text-zinc-300">Playlist is empty</p>
-                        <p className="text-xs text-zinc-500 mt-1">
-                          Open the menu on any song to add it here.
-                        </p>
-                      </div>
-                    ) : (
-                      <div
-                        className={
-                          isPivot
-                            ? 'space-y-0.5'
-                            : 'divide-y divide-white/[0.04] rounded-2xl bg-[#111318]/60 border border-white/[0.06] p-1.5'
-                        }
+                        <Play className="w-4 h-4 fill-current" />
+                        <span>Play</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={plTracks.length === 0}
+                        onClick={() => onShuffleTrackList(plTracks)}
+                        className={`min-h-[44px] px-4 bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-40 text-zinc-100 text-xs font-medium inline-flex items-center gap-2 ${
+                          isPivot ? 'rounded-none border border-white/15' : 'rounded-xl'
+                        }`}
                       >
-                        {plTracks.map((trk, idx) => (
-                          <TrackRow
-                            key={`${trk.id}-${idx}`}
-                            track={trk}
-                            index={idx}
-                            isActive={trk.id === currentTrackId}
-                            isPlaying={isPlaying}
-                            isPivot={isPivot}
-                            playlists={playlists}
-                            onPlay={() => onPlayTrackList(plTracks, idx)}
-                            onPlayNext={() => onPlayNext(trk)}
-                            onAddToQueue={() => onAddToQueue(trk)}
-                            onToggleFavorite={() => onToggleFavorite(trk.id)}
-                            onAddToPlaylist={(plId) => onAddToPlaylist(plId, trk.id)}
-                            onEdit={() => onEditTrack(trk)}
-                            onDelete={() => onDeleteTrack(trk.id)}
-                            removeFromPlaylistLabel="Remove from Playlist"
-                            onRemoveFromPlaylist={() =>
-                              onRemoveFromPlaylist(activePlaylist.id, trk.id)
-                            }
-                          />
-                        ))}
-                      </div>
-                    )}
+                        <Shuffle className="w-4 h-4" />
+                        <span>Shuffle</span>
+                      </button>
+                      {activePlaylist.isSmart && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenSmartPlaylistModal(activePlaylist)}
+                          className={`min-h-[44px] px-4 bg-[var(--accent-tint)] border border-[var(--accent-border)] text-[var(--accent-soft)] text-xs font-medium inline-flex items-center gap-1.5 ${
+                            isPivot ? 'rounded-none' : 'rounded-xl'
+                          }`}
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Edit Rules</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onRenamePlaylist(activePlaylist)}
+                        className={`min-h-[44px] px-4 bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 text-xs font-medium ${
+                          isPivot ? 'rounded-none border border-white/15' : 'rounded-xl'
+                        }`}
+                      >
+                        Rename
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDeletePlaylist(activePlaylist.id);
+                          onSelectPlaylist(null);
+                        }}
+                        className={`min-h-[44px] px-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-medium ${
+                          isPivot ? 'rounded-none' : 'rounded-xl'
+                        }`}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                );
-              })()
-            ) : selectedSmartMix ? (
-              <div className="space-y-5">
+
+                  {plTracks.length === 0 ? (
+                    <div
+                      className={`py-12 text-center border ${
+                        isPivot
+                          ? 'rounded-none bg-black border-white/15'
+                          : 'rounded-2xl bg-[#111318] border-white/[0.06]'
+                      }`}
+                    >
+                      <p className="text-sm font-medium text-zinc-300">
+                        {activePlaylist.isSmart ? 'No matching tracks yet' : 'Playlist is empty'}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {activePlaylist.isSmart
+                          ? 'Adjust smart rules or import matching songs to populate this playlist automatically.'
+                          : 'Open the menu on any song to add it here.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        isPivot
+                          ? 'space-y-0.5'
+                          : 'divide-y divide-white/[0.04] rounded-2xl bg-[#111318]/60 border border-white/[0.06] p-1.5'
+                      }
+                    >
+                      {plTracks.map((trk, idx) => (
+                        <TrackRow
+                          key={`${trk.id}-${idx}`}
+                          track={trk}
+                          index={idx}
+                          isActive={trk.id === currentTrackId}
+                          isPlaying={isPlaying}
+                          isPivot={isPivot}
+                          playlists={playlists}
+                          onPlay={() => onPlayTrackList(plTracks, idx)}
+                          onPlayNext={() => onPlayNext(trk)}
+                          onAddToQueue={() => onAddToQueue(trk)}
+                          onToggleFavorite={() => onToggleFavorite(trk.id)}
+                          onAddToPlaylist={(plId) => onAddToPlaylist(plId, trk.id)}
+                          onEdit={() => onEditTrack(trk)}
+                          onDelete={() => onDeleteTrack(trk.id)}
+                          removeFromPlaylistLabel={
+                            activePlaylist.isSmart ? undefined : 'Remove from Playlist'
+                          }
+                          onRemoveFromPlaylist={
+                            activePlaylist.isSmart
+                              ? undefined
+                              : () => onRemoveFromPlaylist(activePlaylist.id, trk.id)
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()
+          ) : selectedSmartMix ? (
+            <div className="space-y-5">
+              <button
+                type="button"
+                onClick={() => setSelectedSmartMix(null)}
+                className="min-h-[44px] inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>All Playlists</span>
+              </button>
+
+              <div
+                className={`flex items-center justify-between gap-4 p-5 border ${
+                  isPivot
+                    ? 'rounded-none bg-black border-white/15'
+                    : 'rounded-3xl bg-[#111318] border-white/[0.07]'
+                }`}
+              >
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-white">
+                    {selectedSmartMix === 'favorites'
+                      ? 'Favorites Mix'
+                      : selectedSmartMix === 'most-played'
+                      ? 'Most Played'
+                      : 'Recently Added'}
+                  </h1>
+                  <p className="text-xs text-zinc-400 mt-1 font-mono-nums">
+                    {smartMixTracks.length} tracks
+                  </p>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedSmartMix(null)}
-                  className="min-h-[44px] inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>All Playlists</span>
-                </button>
-
-                <div
-                  className={`flex items-center justify-between gap-4 p-5 border ${
-                    isPivot
-                      ? 'rounded-none bg-black border-white/15'
-                      : 'rounded-3xl bg-[#111318] border-white/[0.07]'
+                  disabled={smartMixTracks.length === 0}
+                  onClick={() => onPlayTrackList(smartMixTracks, 0)}
+                  className={`min-h-[44px] px-5 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                    isPivot ? 'rounded-none' : 'rounded-xl'
                   }`}
                 >
-                  <div>
-                    <h1 className="font-display text-2xl font-bold text-white">
-                      {selectedSmartMix === 'favorites'
-                        ? 'Favorites Mix'
-                        : selectedSmartMix === 'most-played'
-                        ? 'Most Played'
-                        : 'Recently Added'}
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Play Mix</span>
+                </button>
+              </div>
+
+              <div
+                className={
+                  isPivot
+                    ? 'space-y-0.5'
+                    : 'divide-y divide-white/[0.04] rounded-2xl bg-[#111318]/60 border border-white/[0.06] p-1.5'
+                }
+              >
+                {smartMixTracks.map((trk, idx) => (
+                  <TrackRow
+                    key={trk.id}
+                    track={trk}
+                    index={idx}
+                    isActive={trk.id === currentTrackId}
+                    isPlaying={isPlaying}
+                    isPivot={isPivot}
+                    playlists={playlists}
+                    onPlay={() => onPlayTrackList(smartMixTracks, idx)}
+                    onPlayNext={() => onPlayNext(trk)}
+                    onAddToQueue={() => onAddToQueue(trk)}
+                    onToggleFavorite={() => onToggleFavorite(trk.id)}
+                    onAddToPlaylist={(plId) => onAddToPlaylist(plId, trk.id)}
+                    onEdit={() => onEditTrack(trk)}
+                    onDelete={() => onDeleteTrack(trk.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  {!isPivot && (
+                    <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                      Playlists
                     </h1>
-                    <p className="text-xs text-zinc-400 mt-1 font-mono-nums">
-                      {smartMixTracks.length} tracks
-                    </p>
-                  </div>
+                  )}
+                  <p className={`text-xs sm:text-sm text-zinc-400 ${isPivot ? '' : 'mt-1'}`}>
+                    Smart offline mixes and custom collections
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    disabled={smartMixTracks.length === 0}
-                    onClick={() => onPlayTrackList(smartMixTracks, 0)}
-                    className={`min-h-[44px] px-5 disabled:opacity-40 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] text-xs font-semibold inline-flex items-center gap-2 transition-colors ${
+                    onClick={() => onOpenSmartPlaylistModal()}
+                    className={`min-h-[44px] px-4 bg-[var(--accent-tint)] hover:brightness-110 border border-[var(--accent-border)] text-[var(--accent-soft)] text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-colors ${
                       isPivot ? 'rounded-none' : 'rounded-xl'
                     }`}
                   >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>Play Mix</span>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Generate Smart Playlist</span>
                   </button>
-                </div>
-
-                <div
-                  className={
-                    isPivot
-                      ? 'space-y-0.5'
-                      : 'divide-y divide-white/[0.04] rounded-2xl bg-[#111318]/60 border border-white/[0.06] p-1.5'
-                  }
-                >
-                  {smartMixTracks.map((trk, idx) => (
-                    <TrackRow
-                      key={trk.id}
-                      track={trk}
-                      index={idx}
-                      isActive={trk.id === currentTrackId}
-                      isPlaying={isPlaying}
-                      isPivot={isPivot}
-                      playlists={playlists}
-                      onPlay={() => onPlayTrackList(smartMixTracks, idx)}
-                      onPlayNext={() => onPlayNext(trk)}
-                      onAddToQueue={() => onAddToQueue(trk)}
-                      onToggleFavorite={() => onToggleFavorite(trk.id)}
-                      onAddToPlaylist={(plId) => onAddToPlaylist(plId, trk.id)}
-                      onEdit={() => onEditTrack(trk)}
-                      onDelete={() => onDeleteTrack(trk.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    {!isPivot && (
-                      <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                        Playlists
-                      </h1>
-                    )}
-                    <p className={`text-xs sm:text-sm text-zinc-400 ${isPivot ? '' : 'mt-1'}`}>
-                      Smart offline mixes and custom collections
-                    </p>
-                  </div>
                   <button
                     type="button"
                     onClick={onCreatePlaylist}
@@ -1597,126 +1672,149 @@ export const LibraryViews: React.FC<LibraryViewsProps> = ({
                     <span>New Playlist</span>
                   </button>
                 </div>
+              </div>
 
-                {/* Smart Mixes */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSmartMix('favorites')}
-                    className={`p-4 border text-left transition-colors space-y-2 ${
+              {/* Smart Mixes */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSmartMix('favorites')}
+                  className={`p-4 border text-left transition-colors space-y-2 ${
+                    isPivot
+                      ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
+                      : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
+                  }`}
+                >
+                  <Heart className="w-5 h-5 text-[var(--accent-primary)]" />
+                  <div>
+                    <p className="text-sm font-semibold text-white">Favorites Mix</p>
+                    <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
+                      {tracks.filter((t) => t.isFavorite).length} tracks
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedSmartMix('recent')}
+                  className={`p-4 border text-left transition-colors space-y-2 ${
+                    isPivot
+                      ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
+                      : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
+                  }`}
+                >
+                  <ListMusic className="w-5 h-5 text-emerald-400" />
+                  <div>
+                    <p className="text-sm font-semibold text-white">Recently Added</p>
+                    <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
+                      Latest {Math.min(25, tracks.length)} imports
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedSmartMix('most-played')}
+                  className={`p-4 border text-left transition-colors space-y-2 ${
+                    isPivot
+                      ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
+                      : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
+                  }`}
+                >
+                  <Play className="w-5 h-5 text-amber-400" />
+                  <div>
+                    <p className="text-sm font-semibold text-white">Most Played</p>
+                    <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
+                      Top rotation offline
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Saved Smart & Custom Playlists */}
+              <div className="space-y-3">
+                <h2 className="font-display text-base font-semibold text-zinc-200">
+                  Your Playlists
+                </h2>
+                {playlists.length === 0 ? (
+                  <div
+                    className={`p-8 border text-center ${
                       isPivot
-                        ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
-                        : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
+                        ? 'rounded-none bg-black border-white/15'
+                        : 'rounded-2xl bg-[#111318] border-white/[0.06]'
                     }`}
                   >
-                    <Heart className="w-5 h-5 text-[var(--accent-primary)]" />
-                    <div>
-                      <p className="text-sm font-semibold text-white">Favorites Mix</p>
-                      <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
-                        {tracks.filter((t) => t.isFavorite).length} tracks
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSmartMix('recent')}
-                    className={`p-4 border text-left transition-colors space-y-2 ${
-                      isPivot
-                        ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
-                        : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
-                    }`}
-                  >
-                    <ListMusic className="w-5 h-5 text-emerald-400" />
-                    <div>
-                      <p className="text-sm font-semibold text-white">Recently Added</p>
-                      <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
-                        Latest {Math.min(25, tracks.length)} imports
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSmartMix('most-played')}
-                    className={`p-4 border text-left transition-colors space-y-2 ${
-                      isPivot
-                        ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
-                        : 'rounded-2xl bg-[#111318] border-white/[0.07] hover:border-white/20'
-                    }`}
-                  >
-                    <Play className="w-5 h-5 text-amber-400" />
-                    <div>
-                      <p className="text-sm font-semibold text-white">Most Played</p>
-                      <p className="text-xs text-zinc-400 font-mono-nums mt-0.5">
-                        Top rotation offline
-                      </p>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Custom Playlists */}
-                <div className="space-y-3">
-                  <h2 className="font-display text-base font-semibold text-zinc-200">
-                    Your Playlists
-                  </h2>
-                  {playlists.length === 0 ? (
-                    <div
-                      className={`p-8 border text-center ${
-                        isPivot
-                          ? 'rounded-none bg-black border-white/15'
-                          : 'rounded-2xl bg-[#111318] border-white/[0.06]'
-                      }`}
-                    >
-                      <p className="text-sm text-zinc-300">No custom playlists created yet</p>
+                    <p className="text-sm text-zinc-300">No custom or smart playlists saved yet</p>
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                       <button
                         type="button"
-                        onClick={onCreatePlaylist}
-                        className={`mt-3 min-h-[40px] px-4 bg-white/[0.06] hover:bg-white/[0.1] text-xs font-medium text-white ${
+                        onClick={() => onOpenSmartPlaylistModal()}
+                        className={`min-h-[40px] px-4 bg-[var(--accent-tint)] border border-[var(--accent-border)] text-xs font-medium text-[var(--accent-soft)] inline-flex items-center gap-1.5 ${
                           isPivot ? 'rounded-none' : 'rounded-xl'
                         }`}
                       >
-                        Create your first playlist
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Generate Smart Playlist</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onCreatePlaylist}
+                        className={`min-h-[40px] px-4 bg-white/[0.06] hover:bg-white/[0.1] text-xs font-medium text-white ${
+                          isPivot ? 'rounded-none' : 'rounded-xl'
+                        }`}
+                      >
+                        Create blank playlist
                       </button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {playlists.map((pl) => {
-                        const firstTrack = tracks.find((t) => t.id === pl.trackIds[0]);
-                        return (
-                          <button
-                            key={pl.id}
-                            type="button"
-                            onClick={() => onSelectPlaylist(pl.id)}
-                            className={`flex items-center gap-3.5 p-3.5 border text-left transition-colors ${
-                              isPivot
-                                ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
-                                : 'rounded-2xl bg-[#111318] border-white/[0.06] hover:border-white/20'
-                            }`}
-                          >
-                            <CoverArt
-                              src={firstTrack?.coverArt}
-                              alt={pl.name}
-                              className={`w-14 h-14 ${isPivot ? 'rounded-none' : 'rounded-xl'}`}
-                              iconSize="w-6 h-6"
-                            />
-                            <div className="min-w-0 flex-1">
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {playlists.map((pl) => {
+                      const plTracks = resolvePlaylistTracks(pl, tracks);
+                      const firstTrack = plTracks[0];
+                      return (
+                        <button
+                          key={pl.id}
+                          type="button"
+                          onClick={() => onSelectPlaylist(pl.id)}
+                          className={`flex items-center gap-3.5 p-3.5 border text-left transition-colors ${
+                            isPivot
+                              ? 'rounded-none bg-black border-white/15 hover:border-[var(--accent-primary)]'
+                              : 'rounded-2xl bg-[#111318] border-white/[0.06] hover:border-white/20'
+                          }`}
+                        >
+                          <CoverArt
+                            src={firstTrack?.coverArt}
+                            alt={pl.name}
+                            className={`w-14 h-14 ${isPivot ? 'rounded-none' : 'rounded-xl'}`}
+                            iconSize="w-6 h-6"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {pl.isSmart && (
+                                <Sparkles className="w-3.5 h-3.5 text-[var(--accent-primary)] shrink-0" />
+                              )}
                               <p className="text-sm font-semibold text-white truncate">{pl.name}</p>
-                              <p className="text-xs text-zinc-400 truncate mt-0.5">
-                                {pl.description || 'Offline playlist'}
-                              </p>
-                              <p className="text-[11px] font-mono-nums text-zinc-500 mt-1">
-                                {pl.trackIds.length} {pl.trackIds.length === 1 ? 'track' : 'tracks'}
-                              </p>
                             </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+                            <p className="text-xs text-zinc-400 truncate mt-0.5">
+                              {pl.description ||
+                                (pl.isSmart && pl.smartRules
+                                  ? describeSmartRules(pl.smartRules)
+                                  : 'Offline playlist')}
+                            </p>
+                            <p className="text-[11px] font-mono-nums text-zinc-500 mt-1">
+                              {plTracks.length} {plTracks.length === 1 ? 'track' : 'tracks'}
+                              {pl.isSmart ? ' · Auto-updated' : ''}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </section>
       )}
 

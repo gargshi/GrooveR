@@ -197,24 +197,26 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   <span>Edit Track Info</span>
                 </button>
 
-                {playlists.length > 0 && (
+                {playlists.some((pl) => !pl.isSmart) && (
                   <div className="pt-1 mt-1 border-t border-white/[0.08]">
                     <p className="px-3 py-1 text-[11px] font-medium text-zinc-500">
                       Add to Playlist
                     </p>
-                    {playlists.map((pl) => (
-                      <button
-                        key={pl.id}
-                        type="button"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          onAddToPlaylist(pl.id);
-                        }}
-                        className="w-full min-h-[36px] px-3 rounded-lg text-left text-xs text-zinc-300 hover:bg-white/[0.07] truncate"
-                      >
-                        {pl.name}
-                      </button>
-                    ))}
+                    {playlists
+                      .filter((pl) => !pl.isSmart)
+                      .map((pl) => (
+                        <button
+                          key={pl.id}
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            onAddToPlaylist(pl.id);
+                          }}
+                          className="w-full min-h-[36px] px-3 rounded-lg text-left text-xs text-zinc-300 hover:bg-white/[0.07] truncate"
+                        >
+                          {pl.name}
+                        </button>
+                      ))}
                   </div>
                 )}
 

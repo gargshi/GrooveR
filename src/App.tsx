@@ -8,6 +8,7 @@ import { PlaylistModal } from './components/PlaylistModal';
 import { QueueDrawer } from './components/QueueDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { SidebarNav } from './components/SidebarNav';
+import { SmartPlaylistModal } from './components/SmartPlaylistModal';
 import { TrackEditorModal } from './components/TrackEditorModal';
 import { GrooveAudioEngine } from './lib/audioEngine';
 import { applyAppFont, applyButtonColorScheme, applyUiScale } from './lib/fonts';
@@ -35,6 +36,7 @@ import {
   PersistedSettings,
   Playlist,
   RepeatMode,
+  SmartPlaylistRules,
   SongsDisplayMode,
   StorageEstimateInfo,
   Track,
@@ -93,6 +95,10 @@ export default function App() {
     mode: 'create' | 'rename';
     playlist?: Playlist;
   }>({ open: false, mode: 'create' });
+  const [smartPlaylistModalState, setSmartPlaylistModalState] = useState<{
+    open: boolean;
+    editingPlaylist?: Playlist | null;
+  }>({ open: false, editingPlaylist: null });
 
   // Sleep Timer
   const [sleepRemainingMin, setSleepRemainingMin] = useState<number | null>(null);
@@ -873,6 +879,48 @@ export default function App() {
     [playlistModalState, showToast]
   );
 
+  const handleSaveSmartPlaylist = useCallback(
+    async (
+      name: string,
+      description: string,
+      rules: SmartPlaylistRules,
+      existingId?: string
+    ) => {
+      if (existingId) {
+        const existing = playlists.find((p) => p.id === existingId);
+        if (!existing) return;
+        const updated: Playlist = {
+          ...existing,
+          name,
+          description,
+          isSmart: true,
+          smartRules: rules,
+          updatedAt: Date.now(),
+        };
+        await savePlaylist(updated);
+        setPlaylists((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        showToast(`Updated smart playlist "${name}"`);
+      } else {
+        const pl: Playlist = {
+          id: `spl-${Date.now()}`,
+          name,
+          description,
+          trackIds: [],
+          isSmart: true,
+          smartRules: rules,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        await savePlaylist(pl);
+        setPlaylists((prev) => [pl, ...prev]);
+        setActiveView('playlists');
+        setActivePlaylistId(pl.id);
+        showToast(`Generated smart playlist "${name}"`);
+      }
+    },
+    [playlists, showToast]
+  );
+
   const handleAddToPlaylist = useCallback(
     (playlistId: string, trackId: string) => {
       setPlaylists((prev) =>
@@ -1040,6 +1088,7 @@ export default function App() {
             setActiveView(v);
             setActivePlaylistId(null);
           }}
+          tracks={tracks}
           playlists={playlists}
           activePlaylistId={activePlaylistId}
           onSelectPlaylist={(plId) => {
@@ -1047,6 +1096,9 @@ export default function App() {
             setActivePlaylistId(plId);
           }}
           onCreatePlaylist={() => setPlaylistModalState({ open: true, mode: 'create' })}
+          onGenerateSmartPlaylist={() =>
+            setSmartPlaylistModalState({ open: true, editingPlaylist: null })
+          }
           onImportFiles={() => fileInputRef.current?.click()}
           onImportFolder={() => folderInputRef.current?.click()}
           onOpenEq={() => setIsEqOpen(true)}
@@ -1085,6 +1137,9 @@ export default function App() {
               onAddToPlaylist={handleAddToPlaylist}
               onRemoveFromPlaylist={handleRemoveFromPlaylist}
               onCreatePlaylist={() => setPlaylistModalState({ open: true, mode: 'create' })}
+              onOpenSmartPlaylistModal={(editing) =>
+                setSmartPlaylistModalState({ open: true, editingPlaylist: editing ?? null })
+              }
               onRenamePlaylist={(pl) =>
                 setPlaylistModalState({ open: true, mode: 'rename', playlist: pl })
               }
@@ -1319,12 +1374,22 @@ export default function App() {
 
       {/* Create / Rename Playlist Modal */}
       <PlaylistModal
+        key={playlistModalState.playlist?.id ?? playlistModalState.mode}
         isOpen={playlistModalState.open}
         mode={playlistModalState.mode}
         initialName={playlistModalState.playlist?.name}
         initialDescription={playlistModalState.playlist?.description}
         onSubmit={handleCreateOrRenamePlaylist}
         onClose={() => setPlaylistModalState({ open: false, mode: 'create' })}
+      />
+
+      {/* Smart Playlist Generator / Rule Editor Modal */}
+      <SmartPlaylistModal
+        isOpen={smartPlaylistModalState.open}
+        tracks={tracks}
+        editingPlaylist={smartPlaylistModalState.editingPlaylist}
+        onSave={handleSaveSmartPlaylist}
+        onClose={() => setSmartPlaylistModalState({ open: false, editingPlaylist: null })}
       />
 
       {/* Drag & Drop Overlay */}

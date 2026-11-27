@@ -44,11 +44,32 @@ export interface TrackMetadataUpdate {
   coverArt?: string;
 }
 
+export type SmartPlaylistSort =
+  | 'addedAt-desc'
+  | 'playCount-desc'
+  | 'lastPlayedAt-desc'
+  | 'title-asc'
+  | 'duration-desc';
+
+export type SmartPlaylistAddedWithin = 'any' | '7d' | '30d' | '90d';
+
+export interface SmartPlaylistRules {
+  genres: string[];
+  addedWithin: SmartPlaylistAddedWithin;
+  minPlayCount: number;
+  favoritesOnly: boolean;
+  losslessOnly: boolean;
+  sortBy: SmartPlaylistSort;
+  limit: number | null;
+}
+
 export interface Playlist {
   id: string;
   name: string;
   description: string;
   trackIds: string[];
+  isSmart?: boolean;
+  smartRules?: SmartPlaylistRules;
   createdAt: number;
   updatedAt: number;
 }
